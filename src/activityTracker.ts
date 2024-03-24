@@ -1,4 +1,3 @@
-console.log("inited");
 chrome.runtime.onMessage.addListener(
   (
     message: { eventName: string } & Record<string, unknown>,
@@ -18,13 +17,11 @@ chrome.runtime.onMessage.addListener(
       const domElement = document.querySelector(element.selector);
       if (!domElement) {
         console.warn("Element not found", element);
-        sendResponse();
         return false;
       }
 
       domElement.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-    sendResponse();
     return false;
   },
 );

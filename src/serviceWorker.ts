@@ -5,7 +5,7 @@ chrome.runtime.onInstalled.addListener(async (_) => {
         id: "activityTracker",
         js: ["bundle/activityTracker.js"],
         persistAcrossSessions: true,
-        matches: ["https://developer.chrome.com/*"],
+        matches: ["https://*/*"],
         runAt: "document_end",
       },
     ]);
@@ -14,16 +14,7 @@ chrome.runtime.onInstalled.addListener(async (_) => {
   }
 });
 
-chrome.tabs.onUpdated.addListener(async (tabId, _, tab) => {
-  const chromeDeveloperUrl = "https://developer.chrome.com/";
-  if (!tab.url?.includes(chromeDeveloperUrl)) {
-    await chrome.sidePanel.setOptions({
-      tabId,
-      enabled: false,
-    });
-    return;
-  }
-
+chrome.tabs.onUpdated.addListener(async (tabId) => {
   await chrome.sidePanel.setOptions({
     tabId,
     path: "sidepanel.html",
