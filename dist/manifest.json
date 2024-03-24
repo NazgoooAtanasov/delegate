@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "delegate",
+  "description": "PoC extension called delegate",
+  "version": "1.0",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "delegate.png"
+  },
+  "background": {
+    "service_worker": "bundle/sw.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "host_permissions": [
+    "https://developer.chrome.com/*"
+  ],
+  "permissions": ["sidePanel", "tabs", "scripting"],
+  "web_accessible_resources": [
+    {
+      "resources": ["images/delete.png"],
+      "matches": ["https://*/*"]
+    }
+  ]
+}
