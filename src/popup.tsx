@@ -2,6 +2,7 @@ import "./style/index.css";
 import { render } from "preact";
 import React from "preact/compat";
 import { resultAsync } from "./utils";
+import Permissions from "./components/Permissions";
 
 function NavButton({ name, onClick }: { name: string; onClick?: () => void }) {
   return (
@@ -59,8 +60,6 @@ function Nav() {
 
   return (
     <nav className="basis-1/6 text-xl">
-      <NavButton name="Start" />
-      <NavButton name="End" />
       <NavButton name="Reports" onClick={openReports} />
       <NavButton name="Side panel" onClick={openSidePanel} />
     </nav>
@@ -68,7 +67,11 @@ function Nav() {
 }
 
 function Body() {
-  return <section className="basis-5/6"></section>;
+  return (
+    <section className="basis-5/6">
+      <Permissions />
+    </section>
+  );
 }
 
 function Root() {

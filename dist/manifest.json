@@ -17,7 +17,7 @@
   "host_permissions": [
     "https://*/*"
   ],
-  "permissions": ["sidePanel", "tabs", "scripting"],
+  "permissions": ["sidePanel", "tabs", "scripting", "webNavigation"],
   "web_accessible_resources": [
     {
       "resources": ["images/delete.png"],
