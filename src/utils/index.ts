@@ -3,9 +3,7 @@ export type ResultAsync<T> = {
   error: any;
 };
 
-export async function resultAsync<T>(
-  promise: Promise<T>,
-): Promise<ResultAsync<T>> {
+export async function resultAsync<T>(promise: Promise<T>): Promise<ResultAsync<T>> {
   try {
     const data = await promise;
     return { data, error: null };

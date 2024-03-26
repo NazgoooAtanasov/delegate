@@ -48,11 +48,7 @@ export function AddIcon({ className }: { className?: string }) {
     >
       <defs id="defs1" />
       <g id="layer1" transform="translate(-65.229181,-108.64689)">
-        <g
-          id="layer1-5"
-          transform="rotate(-45,104.90073,148.45891)"
-          style="fill:#00ff00;fill-opacity:1"
-        >
+        <g id="layer1-5" transform="rotate(-45,104.90073,148.45891)" style="fill:#00ff00;fill-opacity:1">
           <path
             id="path1"
             style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:0.323001"
@@ -89,11 +85,7 @@ export function ConfirmIcon({ className }: { className?: string }) {
     >
       <defs id="defs1" />
       <g id="layer1" transform="translate(-63.288454,-108.44344)">
-        <g
-          id="layer1-5"
-          transform="rotate(-45,103.68477,150.69984)"
-          style="fill:#00ff00;fill-opacity:1"
-        >
+        <g id="layer1-5" transform="rotate(-45,103.68477,150.69984)" style="fill:#00ff00;fill-opacity:1">
           <path
             id="path1"
             style="fill:#00ff00;fill-opacity:1;fill-rule:evenodd;stroke-width:0.323001"

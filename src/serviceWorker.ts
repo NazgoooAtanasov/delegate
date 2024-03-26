@@ -63,8 +63,7 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
 
   if (permission) {
     try {
-      const activeScripts =
-        await chrome.scripting.getRegisteredContentScripts();
+      const activeScripts = await chrome.scripting.getRegisteredContentScripts();
       if (!activeScripts.find((script) => script.id === "activityTracker")) {
         await chrome.scripting.registerContentScripts([
           {
@@ -113,73 +112,67 @@ type RemoveURLPermission = {
   id: number;
 };
 
-chrome.runtime.onMessage.addListener(
-  (
-    message: AddURLPermission | GetURLPermissions | RemoveURLPermission,
-    _,
-    sendResponse,
-  ) => {
-    if (
-      message.eventName !== "getURLPermisions" &&
-      message.eventName !== "addURLPersmission" &&
-      message.eventName !== "removeURLPermission"
-    ) {
-      return false;
-    }
+chrome.runtime.onMessage.addListener((message: AddURLPermission | GetURLPermissions | RemoveURLPermission, _, sendResponse) => {
+  if (
+    message.eventName !== "getURLPermisions" &&
+    message.eventName !== "addURLPersmission" &&
+    message.eventName !== "removeURLPermission"
+  ) {
+    return false;
+  }
 
-    if (!db) {
-      return false;
-    }
+  if (!db) {
+    return false;
+  }
 
-    if (message.eventName === "addURLPersmission") {
-      const transaction = db.transaction("permissions", "readwrite");
-      const permissions = transaction.objectStore("permissions");
+  if (message.eventName === "addURLPersmission") {
+    const transaction = db.transaction("permissions", "readwrite");
+    const permissions = transaction.objectStore("permissions");
 
-      const request = permissions.add({ url: message.url });
+    const request = permissions.add({ url: message.url });
 
-      request.addEventListener("success", () => {
-        sendResponse({ success: true, data: request.result });
-      });
+    request.addEventListener("success", () => {
+      sendResponse({ success: true, data: request.result });
+    });
 
-      request.addEventListener("error", (err) => {
-        sendResponse({ error: err });
-      });
+    request.addEventListener("error", (err) => {
+      sendResponse({ error: err });
+    });
 
-      return true;
-    }
+    return true;
+  }
 
-    if (message.eventName === "getURLPermisions") {
-      const transaction = db.transaction("permissions", "readonly");
-      const permissions = transaction.objectStore("permissions");
+  if (message.eventName === "getURLPermisions") {
+    const transaction = db.transaction("permissions", "readonly");
+    const permissions = transaction.objectStore("permissions");
 
-      const request = permissions.getAll();
+    const request = permissions.getAll();
 
-      request.addEventListener("success", () => {
-        sendResponse(request.result);
-      });
+    request.addEventListener("success", () => {
+      sendResponse(request.result);
+    });
 
-      request.addEventListener("error", (err) => {
-        sendResponse({ error: err });
-      });
+    request.addEventListener("error", (err) => {
+      sendResponse({ error: err });
+    });
 
-      return true;
-    }
+    return true;
+  }
 
-    if (message.eventName === "removeURLPermission") {
-      const transaction = db.transaction("permissions", "readwrite");
-      const permissions = transaction.objectStore("permissions");
+  if (message.eventName === "removeURLPermission") {
+    const transaction = db.transaction("permissions", "readwrite");
+    const permissions = transaction.objectStore("permissions");
 
-      const request = permissions.delete(message.id);
+    const request = permissions.delete(message.id);
 
-      request.addEventListener("success", () => {
-        sendResponse({ success: true, id: message.id });
-      });
+    request.addEventListener("success", () => {
+      sendResponse({ success: true, id: message.id });
+    });
 
-      request.addEventListener("error", (err) => {
-        sendResponse({ error: err });
-      });
+    request.addEventListener("error", (err) => {
+      sendResponse({ error: err });
+    });
 
-      return true;
-    }
-  },
-);
+    return true;
+  }
+});

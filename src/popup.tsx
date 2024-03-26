@@ -45,15 +45,10 @@ function Nav() {
   }
 
   async function openReports() {
-    const openTab = await resultAsync(
-      chrome.tabs.create({ active: true, url: "reports.html" }),
-    );
+    const openTab = await resultAsync(chrome.tabs.create({ active: true, url: "reports.html" }));
 
     if (openTab.error) {
-      console.error(
-        "There was an error opening the reports tab",
-        openTab.error,
-      );
+      console.error("There was an error opening the reports tab", openTab.error);
       return;
     }
   }

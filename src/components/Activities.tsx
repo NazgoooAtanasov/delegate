@@ -22,9 +22,7 @@ type Activities = Activity[];
 
 function CodeSegment({ element }: { element: TargetElement }) {
   let code = `<${element.elementName} `;
-  const attributes = element.attributes
-    .map(([name, value]) => `${name}="${value}"`)
-    .join(" ");
+  const attributes = element.attributes.map(([name, value]) => `${name}="${value}"`).join(" ");
   code += attributes;
   code += `> </${element.elementName}>`;
 
@@ -39,13 +37,7 @@ function CodeSegment({ element }: { element: TargetElement }) {
   );
 }
 
-function Activity({
-  activity,
-  deleteActivity,
-}: {
-  activity: Activity;
-  deleteActivity: () => void;
-}) {
+function Activity({ activity, deleteActivity }: { activity: Activity; deleteActivity: () => void }) {
   const expand = useSignal(false);
 
   function expandActivityDetails() {
@@ -53,9 +45,7 @@ function Activity({
   }
 
   async function scrollIntoView() {
-    const tabResult = await resultAsync(
-      chrome.tabs.query({ active: true, currentWindow: true }),
-    );
+    const tabResult = await resultAsync(chrome.tabs.query({ active: true, currentWindow: true }));
     if (tabResult.error) {
       console.warn("There was an error querying active tab", tabResult.error);
       return;
@@ -75,10 +65,7 @@ function Activity({
       }),
     );
     if (result.error) {
-      console.warn(
-        "There was an error sending scrollIntoView message",
-        result.error,
-      );
+      console.warn("There was an error sending scrollIntoView message", result.error);
       return;
     }
   }
@@ -96,30 +83,21 @@ function Activity({
           </span>
           <span>{expand.value ? "▲" : "▼"}</span>
         </button>
-        <button
-          onClick={deleteActivity}
-          className="mb-[5px] ml-[3px] mt-[5px] outline-none"
-        >
+        <button onClick={deleteActivity} className="mb-[5px] ml-[3px] mt-[5px] outline-none">
           <RemoveIcon className="h-auto max-h-full max-w-full" />
         </button>
       </div>
       {expand.value ? (
         <div className="mb-[5px] mt-[5px] rounded-md bg-green-100 p-[10px]">
           <div className="flex justify-between">
-            <div
-              title={activity.url || ""}
-              className="overflow-hidden text-ellipsis"
-            >
+            <div title={activity.url || ""} className="overflow-hidden text-ellipsis">
               {activity.url || ""}
             </div>
             <div className="text-right text-gray-500"> {activity.action} </div>
           </div>
           <CodeSegment element={activity.element} />
           <div>
-            <button
-              className="mb-[5px] mt-[5px] rounded-md bg-red-200 p-[5px]"
-              onClick={scrollIntoView}
-            >
+            <button className="mb-[5px] mt-[5px] rounded-md bg-red-200 p-[5px]" onClick={scrollIntoView}>
               Scroll into view
             </button>
           </div>
@@ -183,13 +161,7 @@ export default function Activities() {
       </div>
       <div className="mb-[10px] mt-[10px]">
         {activity.value.map((activity, index) => {
-          return (
-            <Activity
-              key={index}
-              activity={activity}
-              deleteActivity={() => deleteActivity(index)}
-            />
-          );
+          return <Activity key={index} activity={activity} deleteActivity={() => deleteActivity(index)} />;
         })}
       </div>
     </div>

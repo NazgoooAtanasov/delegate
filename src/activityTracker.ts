@@ -1,30 +1,24 @@
-chrome.runtime.onMessage.addListener(
-  (
-    message: { eventName: string } & Record<string, unknown>,
-    _,
-    sendResponse,
-  ) => {
-    if (message.eventName === "scrollIntoView") {
-      const { element } = message as {
-        eventName: string;
-        element: {
-          elementName: string;
-          attributes: string[][];
-          selector: string;
-        };
+chrome.runtime.onMessage.addListener((message: { eventName: string } & Record<string, unknown>, _, sendResponse) => {
+  if (message.eventName === "scrollIntoView") {
+    const { element } = message as {
+      eventName: string;
+      element: {
+        elementName: string;
+        attributes: string[][];
+        selector: string;
       };
+    };
 
-      const domElement = document.querySelector(element.selector);
-      if (!domElement) {
-        console.warn("Element not found", element);
-        return false;
-      }
-
-      domElement.scrollIntoView({ behavior: "smooth", block: "center" });
+    const domElement = document.querySelector(element.selector);
+    if (!domElement) {
+      console.warn("Element not found", element);
+      return false;
     }
-    return false;
-  },
-);
+
+    domElement.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  return false;
+});
 
 function serializeDomToObject(element: Element): {
   elementName: string;
@@ -40,13 +34,7 @@ function serializeDomToObject(element: Element): {
   return { elementName, attributes };
 }
 
-function getDomElementSelector({
-  elementName,
-  attributes,
-}: {
-  elementName: string;
-  attributes: string[][];
-}): string {
+function getDomElementSelector({ elementName, attributes }: { elementName: string; attributes: string[][] }): string {
   let selector = `${elementName}`;
   const attributeSelectors = attributes
     .map(([key, value]) => {
@@ -57,13 +45,7 @@ function getDomElementSelector({
   return selector;
 }
 
-function serializeObjectToDom({
-  elementName,
-  attributes,
-}: {
-  elementName: string;
-  attributes: string[][];
-}): Element | null {
+function serializeObjectToDom({ elementName, attributes }: { elementName: string; attributes: string[][] }): Element | null {
   const selector = getDomElementSelector({ elementName, attributes });
   return document.querySelector(selector);
 }
@@ -100,8 +82,7 @@ document.addEventListener("click", async (event) => {
     return;
   }
 
-  const idx =
-    [...target.parentElement!.children].findIndex((el) => el === target) + 1;
+  const idx = [...target.parentElement!.children].findIndex((el) => el === target) + 1;
   targetSelector = targetSelector + `:nth-child(${idx})`;
 
   let lastParent = target;
@@ -109,10 +90,7 @@ document.addEventListener("click", async (event) => {
     const newTarget = lastParent.parentElement!;
     const newTargetObject = serializeDomToObject(newTarget);
     let newTargetSelector = getDomElementSelector(newTargetObject);
-    const idx =
-      [...newTarget.parentElement!.children].findIndex(
-        (el) => el === newTarget,
-      ) + 1;
+    const idx = [...newTarget.parentElement!.children].findIndex((el) => el === newTarget) + 1;
     newTargetSelector += `:nth-child(${idx})`;
     targetSelector = newTargetSelector + " " + targetSelector;
     elementsWithTheSameSelectors = document.querySelectorAll(targetSelector);
