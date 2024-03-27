@@ -1,4 +1,7 @@
+import { EventHandler } from "./serviceWorkerUtils";
+
 let db: IDBDatabase | null = null;
+let eventHandler: EventHandler | null = null;
 
 function installDb(): Promise<IDBDatabase> {
   return new Promise((res, rej) => {
@@ -81,11 +84,13 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
 });
 
 chrome.runtime.onInstalled.addListener(async (_) => {
-  try {
-    db = await installDb();
-  } catch (err) {
-    console.error("There was an error opening indexed db", err);
-    return;
+  if (!eventHandler) {
+    try {
+      eventHandler = new EventHandler();
+      await eventHandler.initialize();
+    } catch (err) {
+      console.error("There was an error initializing the event handler", err);
+    }
   }
 });
 
@@ -120,58 +125,27 @@ chrome.runtime.onMessage.addListener((message: AddURLPermission | GetURLPermissi
     return false;
   }
 
-  if (!db) {
-    return false;
-  }
-
   if (message.eventName === "addURLPersmission") {
-    const transaction = db.transaction("permissions", "readwrite");
-    const permissions = transaction.objectStore("permissions");
-
-    const request = permissions.add({ url: message.url });
-
-    request.addEventListener("success", () => {
-      sendResponse({ success: true, data: request.result });
-    });
-
-    request.addEventListener("error", (err) => {
-      sendResponse({ error: err });
-    });
-
+    eventHandler
+      ?.addURLPermission(message)
+      .then((result) => sendResponse(result))
+      .catch((err) => sendResponse(err));
     return true;
   }
 
   if (message.eventName === "getURLPermisions") {
-    const transaction = db.transaction("permissions", "readonly");
-    const permissions = transaction.objectStore("permissions");
-
-    const request = permissions.getAll();
-
-    request.addEventListener("success", () => {
-      sendResponse(request.result);
-    });
-
-    request.addEventListener("error", (err) => {
-      sendResponse({ error: err });
-    });
-
+    eventHandler
+      ?.getURLPermissions(message)
+      .then((result) => sendResponse(result))
+      .catch((err) => sendResponse(err));
     return true;
   }
 
   if (message.eventName === "removeURLPermission") {
-    const transaction = db.transaction("permissions", "readwrite");
-    const permissions = transaction.objectStore("permissions");
-
-    const request = permissions.delete(message.id);
-
-    request.addEventListener("success", () => {
-      sendResponse({ success: true, id: message.id });
-    });
-
-    request.addEventListener("error", (err) => {
-      sendResponse({ error: err });
-    });
-
+    eventHandler
+      ?.removeURLPermission(message)
+      .then((result) => sendResponse(result))
+      .catch((err) => sendResponse(err));
     return true;
   }
 });

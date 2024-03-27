@@ -1,6 +1,6 @@
 import { useSignal } from "@preact/signals";
 import React, { useEffect } from "preact/compat";
-import { resultAsync } from "../utils";
+import { ResultAsync, resultAsync } from "../utils";
 import { AddIcon, ConfirmIcon, RemoveIcon } from "./Icons";
 
 type Permission = { id: number; url: string };
@@ -37,12 +37,13 @@ export default function Permissions() {
       return;
     }
 
-    const response = await resultAsync<number>(
+    const response = (await resultAsync(
       chrome.runtime.sendMessage({
         eventName: "addURLPersmission",
         url: newPermisionUrl.value,
       }),
-    );
+      "bare",
+    )) as ResultAsync<number>;
 
     if (response.error) {
       console.error("There was an error trying to add permission", response.error);
@@ -55,12 +56,13 @@ export default function Permissions() {
   }
 
   async function removePermission(id: number) {
-    const result = await resultAsync(
+    const result = (await resultAsync(
       chrome.runtime.sendMessage({
         eventName: "removeURLPermission",
         id,
       }),
-    );
+      "bare",
+    )) as ResultAsync<number>;
 
     if (result.error) {
       console.error("There was an error trying to remove permission", result.error);
@@ -72,11 +74,12 @@ export default function Permissions() {
 
   useEffect(() => {
     (async () => {
-      const response = await resultAsync<Permissions>(
+      const response: ResultAsync<Permissions> = (await resultAsync(
         chrome.runtime.sendMessage({
           eventName: "getURLPermisions",
         }),
-      );
+        "bare",
+      )) as ResultAsync<Permissions>;
 
       if (response.error) {
         console.error("There was an error getting the permissions", response.error);
