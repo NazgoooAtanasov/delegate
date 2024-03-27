@@ -1,17 +1,22 @@
 import { ResultAsync } from "../utils";
 
-type AddURLPermission = {
+export type AddURLPermission = {
   eventName: "addURLPermission";
   url: string;
 };
 
-type GetURLPermissions = {
+export type GetURLPermissions = {
   eventName: "getURLPermissions";
 };
 
-type RemoveURLPermission = {
+export type RemoveURLPermission = {
   eventName: "removeURLPermission";
   id: number;
+};
+
+export type GetURLPermission = {
+  eventName: "getURLPermission";
+  url: string;
 };
 
 export default class EventHandler {
@@ -102,6 +107,26 @@ export default class EventHandler {
       });
 
       request?.addEventListener("error", (err) => {
+        rej({ error: err });
+      });
+    });
+  }
+
+  async getURLPermission(event: GetURLPermission): Promise<ResultAsync<{ id: number; url: string }>> {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    return new Promise((res, rej) => {
+      const transaction = this.db?.transaction("permissions", "readonly");
+      const permissions = transaction?.objectStore("permissions");
+      const permissionQuery = permissions?.index("url").get(event.url);
+
+      permissionQuery?.addEventListener("success", () => {
+        res({ data: permissionQuery?.result });
+      });
+
+      permissionQuery?.addEventListener("error", (err) => {
         rej({ error: err });
       });
     });

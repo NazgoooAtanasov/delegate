@@ -45,7 +45,7 @@ function Activity({ activity, deleteActivity }: { activity: Activity; deleteActi
   }
 
   async function scrollIntoView() {
-    const tabResult = await resultAsync(chrome.tabs.query({ active: true, currentWindow: true }));
+    const tabResult = await resultAsync(chrome.tabs.query({ active: true, currentWindow: true }), "resultfiy");
     if (tabResult.error) {
       console.warn("There was an error querying active tab", tabResult.error);
       return;
@@ -63,6 +63,7 @@ function Activity({ activity, deleteActivity }: { activity: Activity; deleteActi
         element: activity.element,
         selector: activity.element.selector,
       }),
+      "resultfiy",
     );
     if (result.error) {
       console.warn("There was an error sending scrollIntoView message", result.error);

@@ -19,6 +19,7 @@ function Nav() {
         active: true,
         lastFocusedWindow: true,
       }),
+      "resultfiy",
     );
 
     if (tabs.error) {
@@ -37,6 +38,7 @@ function Nav() {
         tabId: tab.id,
         windowId: tab.windowId,
       }),
+      "resultfiy",
     );
 
     if (open.error) {
@@ -45,7 +47,7 @@ function Nav() {
   }
 
   async function openReports() {
-    const openTab = await resultAsync(chrome.tabs.create({ active: true, url: "reports.html" }));
+    const openTab = await resultAsync(chrome.tabs.create({ active: true, url: "reports.html" }), "resultfiy");
 
     if (openTab.error) {
       console.error("There was an error opening the reports tab", openTab.error);

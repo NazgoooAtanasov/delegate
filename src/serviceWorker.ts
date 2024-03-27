@@ -1,64 +1,33 @@
 import { EventHandler } from "./serviceWorkerUtils";
+import { AddURLPermission, GetURLPermissions, RemoveURLPermission } from "./serviceWorkerUtils/eventHandler";
 
-let db: IDBDatabase | null = null;
 let eventHandler: EventHandler | null = null;
-
-function installDb(): Promise<IDBDatabase> {
-  return new Promise((res, rej) => {
-    const dbOpenRequest = indexedDB.open("delegate", 1);
-
-    dbOpenRequest.addEventListener("error", (err) => rej(err));
-
-    dbOpenRequest.addEventListener("success", (_) => res(dbOpenRequest.result));
-
-    dbOpenRequest.addEventListener("upgradeneeded", () => {
-      const db = dbOpenRequest.result;
-
-      const permissions = db.createObjectStore("permissions", {
-        keyPath: "id",
-        autoIncrement: true,
-      });
-
-      permissions.createIndex("url", "url", { unique: true });
-    });
-  });
-}
-
-async function getPermission(url: string): Promise<{ id: number; url: string } | undefined> {
-  if (!db) {
-    try {
-      db = await installDb();
-    } catch (err) {
-      console.error("There was an error opening indexed db", err);
-      return;
-    }
-  }
-
-  return new Promise((res, rej) => {
-    const transaction = db?.transaction("permissions", "readonly");
-    const permissions = transaction?.objectStore("permissions");
-    const permissionQuery = permissions?.index("url").get(url);
-
-    permissionQuery?.addEventListener("success", () => {
-      res(permissionQuery?.result);
-    });
-
-    permissionQuery?.addEventListener("error", (err) => {
-      console.error("There was an error getting the permission", err);
-      rej(err);
-    });
-  });
-}
 
 chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
   if (changeInfo.status !== "loading") return;
-  const url = tab.url!;
 
+  if (!eventHandler) {
+    try {
+      eventHandler = new EventHandler();
+      await eventHandler.initialize();
+    } catch (err) {
+      console.error("There was an error initializing the event handler", err);
+    }
+  }
+
+  const url = tab.url!;
   let permission: { id: number; url: string } | undefined = undefined;
 
   try {
     const urlOjb = new URL(url);
-    permission = await getPermission(urlOjb.hostname);
+    const result = await eventHandler?.getURLPermission({ eventName: "getURLPermission", url: urlOjb.hostname });
+
+    if (result?.error) {
+      console.error("There was an error getting the permission", result.error);
+      return;
+    }
+
+    permission = result?.data;
   } catch (err) {
     console.error("There was an error getting the permission", err);
   }
@@ -101,20 +70,6 @@ chrome.tabs.onUpdated.addListener(async (tabId) => {
     enabled: true,
   });
 });
-
-type AddURLPermission = {
-  eventName: "addURLPermission";
-  url: string;
-};
-
-type GetURLPermissions = {
-  eventName: "getURLPermissions";
-};
-
-type RemoveURLPermission = {
-  eventName: "removeURLPermission";
-  id: number;
-};
 
 chrome.runtime.onMessage.addListener((message: AddURLPermission | GetURLPermissions | RemoveURLPermission, _, sendResponse) => {
   if (
