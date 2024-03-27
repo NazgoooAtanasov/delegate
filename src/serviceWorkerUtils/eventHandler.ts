@@ -1,12 +1,12 @@
 import { ResultAsync } from "../utils";
 
 type AddURLPermission = {
-  eventName: "addURLPersmission";
+  eventName: "addURLPermission";
   url: string;
 };
 
 type GetURLPermissions = {
-  eventName: "getURLPermisions";
+  eventName: "getURLPermissions";
 };
 
 type RemoveURLPermission = {

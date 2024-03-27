@@ -20,7 +20,7 @@ function Permission({ permission, removePermission }: { permission: Permission; 
 export default function Permissions() {
   const showNewField = useSignal(false);
   const permissions = useSignal<Permissions>([]);
-  const newPermisionUrl = useSignal("");
+  const newPermissionUrl = useSignal("");
 
   chrome.runtime.onMessage.addListener((message: { eventName: "urlPermissionRemoved"; id: number }) => {
     if (message.eventName !== "urlPermissionRemoved") {
@@ -33,14 +33,14 @@ export default function Permissions() {
   });
 
   async function addPermission() {
-    if (newPermisionUrl.value.length <= 0) {
+    if (newPermissionUrl.value.length <= 0) {
       return;
     }
 
     const response = (await resultAsync(
       chrome.runtime.sendMessage({
-        eventName: "addURLPersmission",
-        url: newPermisionUrl.value,
+        eventName: "addURLPermission",
+        url: newPermissionUrl.value,
       }),
       "bare",
     )) as ResultAsync<number>;
@@ -51,8 +51,8 @@ export default function Permissions() {
     }
 
     showNewField.value = false;
-    permissions.value = [...permissions.value, { id: response.data!, url: newPermisionUrl.value }];
-    newPermisionUrl.value = "";
+    permissions.value = [...permissions.value, { id: response.data!, url: newPermissionUrl.value }];
+    newPermissionUrl.value = "";
   }
 
   async function removePermission(id: number) {
@@ -76,7 +76,7 @@ export default function Permissions() {
     (async () => {
       const response: ResultAsync<Permissions> = (await resultAsync(
         chrome.runtime.sendMessage({
-          eventName: "getURLPermisions",
+          eventName: "getURLPermissions",
         }),
         "bare",
       )) as ResultAsync<Permissions>;
@@ -99,7 +99,7 @@ export default function Permissions() {
         <div className="m-[5px] grid grid-cols-[minmax(90%,_auto)_auto] grid-rows-[40px] text-base">
           <input
             className="rounded-md bg-gray-400 p-[10px] placeholder-gray-100"
-            onChange={(e) => (newPermisionUrl.value = (e.target as HTMLInputElement).value)}
+            onChange={(e) => (newPermissionUrl.value = (e.target as HTMLInputElement).value)}
             placeholder="URL"
           />
           <button onClick={addPermission} className="mb-[5px] ml-[3px] mt-[5px] outline-none">

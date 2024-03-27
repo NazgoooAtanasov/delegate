@@ -24,7 +24,7 @@ function installDb(): Promise<IDBDatabase> {
   });
 }
 
-async function getPersmission(url: string): Promise<{ id: number; url: string } | undefined> {
+async function getPermission(url: string): Promise<{ id: number; url: string } | undefined> {
   if (!db) {
     try {
       db = await installDb();
@@ -58,7 +58,7 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
 
   try {
     const urlOjb = new URL(url);
-    permission = await getPersmission(urlOjb.hostname);
+    permission = await getPermission(urlOjb.hostname);
   } catch (err) {
     console.error("There was an error getting the permission", err);
   }
@@ -103,12 +103,12 @@ chrome.tabs.onUpdated.addListener(async (tabId) => {
 });
 
 type AddURLPermission = {
-  eventName: "addURLPersmission";
+  eventName: "addURLPermission";
   url: string;
 };
 
 type GetURLPermissions = {
-  eventName: "getURLPermisions";
+  eventName: "getURLPermissions";
 };
 
 type RemoveURLPermission = {
@@ -118,14 +118,14 @@ type RemoveURLPermission = {
 
 chrome.runtime.onMessage.addListener((message: AddURLPermission | GetURLPermissions | RemoveURLPermission, _, sendResponse) => {
   if (
-    message.eventName !== "getURLPermisions" &&
-    message.eventName !== "addURLPersmission" &&
+    message.eventName !== "getURLPermissions" &&
+    message.eventName !== "addURLPermission" &&
     message.eventName !== "removeURLPermission"
   ) {
     return false;
   }
 
-  if (message.eventName === "addURLPersmission") {
+  if (message.eventName === "addURLPermission") {
     eventHandler
       ?.addURLPermission(message)
       .then((result) => sendResponse(result))
@@ -133,7 +133,7 @@ chrome.runtime.onMessage.addListener((message: AddURLPermission | GetURLPermissi
     return true;
   }
 
-  if (message.eventName === "getURLPermisions") {
+  if (message.eventName === "getURLPermissions") {
     eventHandler
       ?.getURLPermissions(message)
       .then((result) => sendResponse(result))
