@@ -1,5 +1,5 @@
 import { EventHandler } from "./serviceWorkerUtils";
-import { AddURLPermission, GetURLPermissions, RemoveURLPermission } from "./serviceWorkerUtils/eventHandler";
+import { AddActivity, AddURLPermission, GetURLPermissions, RemoveURLPermission } from "./serviceWorkerUtils/eventHandler";
 
 let eventHandler: EventHandler | null = null;
 
@@ -71,36 +71,51 @@ chrome.tabs.onUpdated.addListener(async (tabId) => {
   });
 });
 
-chrome.runtime.onMessage.addListener((message: AddURLPermission | GetURLPermissions | RemoveURLPermission, _, sendResponse) => {
-  if (
-    message.eventName !== "getURLPermissions" &&
-    message.eventName !== "addURLPermission" &&
-    message.eventName !== "removeURLPermission"
-  ) {
-    return false;
-  }
+chrome.runtime.onMessage.addListener(
+  (message: AddURLPermission | GetURLPermissions | RemoveURLPermission | AddActivity, _, sendResponse) => {
+    if (
+      message.eventName !== "getURLPermissions" &&
+      message.eventName !== "addURLPermission" &&
+      message.eventName !== "removeURLPermission" &&
+      message.eventName !== "addActivity"
+    ) {
+      return false;
+    }
 
-  if (message.eventName === "addURLPermission") {
-    eventHandler
-      ?.addURLPermission(message)
-      .then((result) => sendResponse(result))
-      .catch((err) => sendResponse(err));
-    return true;
-  }
+    if (message.eventName === "addURLPermission") {
+      eventHandler
+        ?.addURLPermission(message)
+        .then((result) => sendResponse(result))
+        .catch((err) => sendResponse(err));
+      return true;
+    }
 
-  if (message.eventName === "getURLPermissions") {
-    eventHandler
-      ?.getURLPermissions(message)
-      .then((result) => sendResponse(result))
-      .catch((err) => sendResponse(err));
-    return true;
-  }
+    if (message.eventName === "getURLPermissions") {
+      eventHandler
+        ?.getURLPermissions(message)
+        .then((result) => sendResponse(result))
+        .catch((err) => sendResponse(err));
+      return true;
+    }
 
-  if (message.eventName === "removeURLPermission") {
-    eventHandler
-      ?.removeURLPermission(message)
-      .then((result) => sendResponse(result))
-      .catch((err) => sendResponse(err));
-    return true;
-  }
-});
+    if (message.eventName === "removeURLPermission") {
+      eventHandler
+        ?.removeURLPermission(message)
+        .then((result) => sendResponse(result))
+        .catch((err) => sendResponse(err));
+      return true;
+    }
+
+    if (message.eventName === "addActivity") {
+      eventHandler
+        ?.addActivity(message)
+        .then((result) => {
+          // @FIXME: this is not perfomant, ples fix fast
+          chrome.runtime.sendMessage({ eventName: "activityAdded", ...result.data });
+          sendResponse(result);
+        })
+        .catch((err) => sendResponse(err));
+      return true;
+    }
+  },
+);

@@ -5,22 +5,21 @@ import { resultAsync } from "../utils";
 import { RemoveIcon } from "./Icons";
 Prismjs.manual = true;
 
-type TargetElement = {
+// @TODO: this is pretty much the same thing as AddActivity from eventHandler. FIX?
+type ActivityAdded = {
+  eventName: "activityAdded";
+  action: "click";
+  url: string;
+  activityTitle?: string;
   elementName: string;
   attributes: string[][];
   selector: string;
 };
 
-type Activity = {
-  action: "click";
-  url?: string;
-  activityTitle: string;
-  element: TargetElement;
-};
-
+type Activity = Omit<ActivityAdded, "eventName">;
 type Activities = Activity[];
 
-function CodeSegment({ element }: { element: TargetElement }) {
+function CodeSegment({ element }: { element: { elementName: string; attributes: string[][] } }) {
   let code = `<${element.elementName} `;
   const attributes = element.attributes.map(([name, value]) => `${name}="${value}"`).join(" ");
   code += attributes;
@@ -39,6 +38,11 @@ function CodeSegment({ element }: { element: TargetElement }) {
 
 function Activity({ activity, deleteActivity }: { activity: Activity; deleteActivity: () => void }) {
   const expand = useSignal(false);
+
+  const element: { elementName: string; attributes: string[][] } = {
+    elementName: activity.elementName,
+    attributes: activity.attributes,
+  };
 
   function expandActivityDetails() {
     expand.value = !expand.value;
@@ -60,8 +64,7 @@ function Activity({ activity, deleteActivity }: { activity: Activity; deleteActi
     const result = await resultAsync(
       chrome.tabs.sendMessage(tab.id, {
         eventName: "scrollIntoView",
-        element: activity.element,
-        selector: activity.element.selector,
+        selector: activity.selector,
       }),
       "resultfiy",
     );
@@ -96,7 +99,7 @@ function Activity({ activity, deleteActivity }: { activity: Activity; deleteActi
             </div>
             <div className="text-right text-gray-500"> {activity.action} </div>
           </div>
-          <CodeSegment element={activity.element} />
+          <CodeSegment element={element} />
           <div>
             <button className="mb-[5px] mt-[5px] rounded-md bg-red-200 p-[5px]" onClick={scrollIntoView}>
               Scroll into view
@@ -113,31 +116,6 @@ function Activity({ activity, deleteActivity }: { activity: Activity; deleteActi
 export default function Activities() {
   const activity = useSignal<Activities>([]);
 
-  function updateActions(
-    message: {
-      eventName: "activity";
-      url?: string;
-      activityTitle: string;
-    } & TargetElement,
-  ) {
-    if (message.eventName === "activity") {
-      activity.value = [
-        ...activity.value,
-        {
-          action: "click",
-          url: message.url,
-          activityTitle: message.activityTitle,
-          element: {
-            elementName: message.elementName,
-            attributes: message.attributes,
-            selector: message.selector,
-          },
-        },
-      ];
-    }
-    return false;
-  }
-
   function clearActions() {
     activity.value = [];
   }
@@ -146,12 +124,17 @@ export default function Activities() {
     activity.value = activity.value.filter((_, i) => i !== index);
   }
 
-  chrome.runtime.onMessage.addListener(updateActions);
+  function updateActivities({ eventName, action, url, activityTitle, elementName, attributes, selector }: ActivityAdded) {
+    if (eventName !== "activityAdded") return false;
 
+    activity.value = [...activity.value, { action, url, activityTitle, elementName, attributes, selector }];
+
+    return false;
+  }
+
+  chrome.runtime.onMessage.addListener(updateActivities);
   useEffect(() => {
-    return () => {
-      chrome.runtime.onMessage.removeListener(updateActions);
-    };
+    return () => chrome.runtime.onMessage.removeListener(updateActivities);
   });
 
   return (

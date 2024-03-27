@@ -19,6 +19,16 @@ export type GetURLPermission = {
   url: string;
 };
 
+export type AddActivity = {
+  eventName: "addActivity";
+  action: "click";
+  url: string;
+  activityTitle?: string;
+  elementName: string;
+  attributes: string;
+  selector: string;
+};
+
 export default class EventHandler {
   private db: IDBDatabase | null = null;
 
@@ -26,7 +36,7 @@ export default class EventHandler {
 
   async initialize() {
     return new Promise((res, rej) => {
-      const dbOpenRequest = indexedDB.open("delegate", 1);
+      const dbOpenRequest = indexedDB.open("delegate", 2);
 
       dbOpenRequest.addEventListener("success", (_) => {
         this.db = dbOpenRequest.result;
@@ -38,12 +48,20 @@ export default class EventHandler {
       dbOpenRequest.addEventListener("upgradeneeded", () => {
         this.db = dbOpenRequest.result;
 
-        const permissions = this.db.createObjectStore("permissions", {
-          keyPath: "id",
-          autoIncrement: true,
-        });
+        if (!this.db.objectStoreNames.contains("permissions")) {
+          const permissions = this.db.createObjectStore("permissions", {
+            keyPath: "id",
+            autoIncrement: true,
+          });
+          permissions.createIndex("url", "url", { unique: true });
+        }
 
-        permissions.createIndex("url", "url", { unique: true });
+        if (!this.db.objectStoreNames.contains("activites")) {
+          this.db.createObjectStore("activites", {
+            keyPath: "id",
+            autoIncrement: true,
+          });
+        }
 
         res(this.db);
       });
@@ -127,6 +145,42 @@ export default class EventHandler {
       });
 
       permissionQuery?.addEventListener("error", (err) => {
+        rej({ error: err });
+      });
+    });
+  }
+
+  async addActivity({
+    action,
+    url,
+    activityTitle,
+    elementName,
+    attributes,
+    selector,
+  }: AddActivity): Promise<ResultAsync<Omit<AddActivity, "eventName">>> {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    return new Promise((res, rej) => {
+      const transaction = this.db?.transaction("activites", "readwrite");
+      const activities = transaction?.objectStore("activites");
+      const activity = {
+        action,
+        url,
+        activityTitle,
+        elementName,
+        attributes,
+        selector,
+      };
+
+      const request = activities?.add(activity);
+
+      request?.addEventListener("success", () => {
+        res({ data: activity });
+      });
+
+      request?.addEventListener("error", (err) => {
         rej({ error: err });
       });
     });

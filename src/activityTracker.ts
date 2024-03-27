@@ -1,17 +1,13 @@
 chrome.runtime.onMessage.addListener((message: { eventName: string } & Record<string, unknown>, _, __) => {
   if (message.eventName === "scrollIntoView") {
-    const { element } = message as {
+    const { selector } = message as {
       eventName: string;
-      element: {
-        elementName: string;
-        attributes: string[][];
-        selector: string;
-      };
+      selector: string;
     };
 
-    const domElement = document.querySelector(element.selector);
+    const domElement = document.querySelector(selector);
     if (!domElement) {
-      console.warn("Element not found", element);
+      console.warn("Element not found", selector);
       return false;
     }
 
@@ -52,6 +48,7 @@ async function sendMessage(message: {
   elementName: string;
   attributes: string[][];
   selector: string;
+  action: "click";
 }) {
   try {
     await chrome.runtime.sendMessage(message);
@@ -67,12 +64,13 @@ document.addEventListener("click", async (event) => {
   let elementsWithTheSameSelectors = document.querySelectorAll(targetSelector);
   if (elementsWithTheSameSelectors.length === 1) {
     await sendMessage({
-      eventName: "activity",
+      eventName: "addActivity",
       url: window.location.toString(),
       activityTitle: target.textContent,
       elementName: targetObject.elementName,
       attributes: targetObject.attributes,
       selector: targetSelector,
+      action: "click",
     });
     return;
   }
@@ -97,7 +95,8 @@ document.addEventListener("click", async (event) => {
   }
 
   await sendMessage({
-    eventName: "activity",
+    eventName: "addActivity",
+    action: "click",
     url: window.location.toString(),
     activityTitle: target.textContent,
     elementName: targetObject.elementName,
