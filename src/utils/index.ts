@@ -1,6 +1,6 @@
 export type ResultAsync<T> = {
   data?: T;
-  error: any;
+  error?: unknown;
 };
 
 export async function resultAsync<T>(promise: Promise<T>): Promise<ResultAsync<T>> {

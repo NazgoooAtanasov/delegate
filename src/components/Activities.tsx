@@ -72,7 +72,7 @@ function Activity({ activity, deleteActivity }: { activity: Activity; deleteActi
 
   return (
     <>
-      <div class="grid max-h-[60px] grid-cols-[minmax(90%,_auto)_auto] grid-rows-[60px]">
+      <div class="grid max-h-[60px] grid-cols-[minmax(90%,_auto)_10%] grid-rows-[60px]">
         <button
           onClick={expandActivityDetails}
           className="mb-[5px] mt-[5px] flex min-w-0 max-w-full justify-between rounded-md bg-gray-400 p-[10px] text-left text-lg outline-none"

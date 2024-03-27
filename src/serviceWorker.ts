@@ -21,27 +21,26 @@ function installDb(): Promise<IDBDatabase> {
   });
 }
 
-function getPersmission(url: string): Promise<any> {
-  return new Promise(async (res, rej) => {
-    if (!db) {
-      try {
-        db = await installDb();
-      } catch (err) {
-        console.error("There was an error opening indexed db", err);
-        rej(err);
-        return;
-      }
+async function getPersmission(url: string): Promise<{ id: number; url: string } | undefined> {
+  if (!db) {
+    try {
+      db = await installDb();
+    } catch (err) {
+      console.error("There was an error opening indexed db", err);
+      return;
     }
+  }
 
-    const transaction = db.transaction("permissions", "readonly");
-    const permissions = transaction.objectStore("permissions");
-    const permissionQuery = permissions.index("url").get(url);
+  return new Promise((res, rej) => {
+    const transaction = db?.transaction("permissions", "readonly");
+    const permissions = transaction?.objectStore("permissions");
+    const permissionQuery = permissions?.index("url").get(url);
 
-    permissionQuery.addEventListener("success", () => {
-      res(permissionQuery.result);
+    permissionQuery?.addEventListener("success", () => {
+      res(permissionQuery?.result);
     });
 
-    permissionQuery.addEventListener("error", (err) => {
+    permissionQuery?.addEventListener("error", (err) => {
       console.error("There was an error getting the permission", err);
       rej(err);
     });

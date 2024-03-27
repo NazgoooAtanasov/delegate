@@ -1,4 +1,4 @@
-chrome.runtime.onMessage.addListener((message: { eventName: string } & Record<string, unknown>, _, sendResponse) => {
+chrome.runtime.onMessage.addListener((message: { eventName: string } & Record<string, unknown>, _, __) => {
   if (message.eventName === "scrollIntoView") {
     const { element } = message as {
       eventName: string;
@@ -43,11 +43,6 @@ function getDomElementSelector({ elementName, attributes }: { elementName: strin
     .join("");
   selector += attributeSelectors;
   return selector;
-}
-
-function serializeObjectToDom({ elementName, attributes }: { elementName: string; attributes: string[][] }): Element | null {
-  const selector = getDomElementSelector({ elementName, attributes });
-  return document.querySelector(selector);
 }
 
 async function sendMessage(message: {
