@@ -1,12 +1,24 @@
 import { render } from "preact";
-import React from "preact/compat";
-import Activities from "./components/Activities";
+import React, { useEffect } from "preact/compat";
+import Activities, { type Activities as ActivitiesType } from "./components/Activities";
+import { useSignal } from "@preact/signals";
 
-const SidePanel = (
-  <div>
-    <h1>Side panel</h1>
-    <Activities />
-  </div>
-);
+function SidePanel() {
+  const activities = useSignal<ActivitiesType>([]);
 
-render(SidePanel, document.body);
+  useEffect(() => {
+    chrome.runtime
+      .sendMessage({ eventName: "getActivities" })
+      .then((result) => (activities.value = result.data!))
+      .catch((error) => console.error("There was an error getting activities", error));
+  }, []);
+
+  return (
+    <div>
+      <h1>Side panel</h1>
+      <Activities activities={activities} />
+    </div>
+  );
+}
+
+render(<SidePanel />, document.body);

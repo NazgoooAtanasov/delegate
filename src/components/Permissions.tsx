@@ -1,10 +1,10 @@
-import { useSignal } from "@preact/signals";
+import { Signal, useSignal } from "@preact/signals";
 import React from "preact/compat";
 import { ResultAsync, resultAsync } from "../utils";
 import { AddIcon, ConfirmIcon, RemoveIcon } from "./Icons";
 
-type Permission = { id: number; url: string };
-type Permissions = Permission[];
+export type Permission = { id: number; url: string };
+export type Permissions = Permission[];
 
 function Permission({ permission, removePermission }: { permission: Permission; removePermission: () => Promise<void> }) {
   return (
@@ -17,9 +17,8 @@ function Permission({ permission, removePermission }: { permission: Permission; 
   );
 }
 
-export default function Permissions() {
+export default function Permissions({ permissions }: { permissions: Signal<Permissions> }) {
   const showNewField = useSignal(false);
-  const permissions = useSignal<Permissions>([]);
   const newPermissionUrl = useSignal("");
 
   chrome.runtime.onMessage.addListener((message: { eventName: "urlPermissionRemoved"; id: number }) => {
@@ -71,22 +70,6 @@ export default function Permissions() {
 
     permissions.value = permissions.value.filter((permission) => permission.id !== id);
   }
-
-  (async () => {
-    const response: ResultAsync<Permissions> = (await resultAsync(
-      chrome.runtime.sendMessage({
-        eventName: "getURLPermissions",
-      }),
-      "bare",
-    )) as ResultAsync<Permissions>;
-
-    if (response.error) {
-      console.error("There was an error getting the permissions", response.error);
-      return;
-    }
-
-    permissions.value = response.data!;
-  })();
 
   return (
     <div>

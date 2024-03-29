@@ -1,8 +1,9 @@
 import "./style/index.css";
 import { render } from "preact";
-import React from "preact/compat";
+import React, { useEffect } from "preact/compat";
 import { resultAsync } from "./utils";
-import Permissions from "./components/Permissions";
+import Permissions, { type Permissions as PermissionsType } from "./components/Permissions";
+import { useSignal } from "@preact/signals";
 
 function NavButton({ name, onClick }: { name: string; onClick?: () => void }) {
   return (
@@ -64,9 +65,24 @@ function Nav() {
 }
 
 function Body() {
+  const permissions = useSignal<PermissionsType>([]);
+
+  useEffect(() => {
+    chrome.runtime
+      .sendMessage({
+        eventName: "getURLPermissions",
+      })
+      .then((response) => {
+        permissions.value = response.data!;
+      })
+      .catch((error) => {
+        console.error("There was an error getting the permissions", error);
+      });
+  }, []);
+
   return (
     <section className="basis-5/6">
-      <Permissions />
+      <Permissions permissions={permissions} />
     </section>
   );
 }
