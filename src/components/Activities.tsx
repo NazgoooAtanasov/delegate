@@ -3,6 +3,7 @@ import React, { useEffect } from "preact/compat";
 import Prismjs from "prismjs";
 import { ResultAsync, resultAsync } from "../utils";
 import { ArrowDownIcon, ArrowUpIcon, RemoveIcon } from "./Icons";
+import Button from "./Button";
 Prismjs.manual = true;
 
 // @TODO: this is pretty much the same thing as AddActivity from eventHandler. FIX?
@@ -83,7 +84,7 @@ function Activity({ activity, deleteActivity }: { activity: Activity; deleteActi
             <span className="text-green-300">{activity.action}</span>:&nbsp;
             {activity.activityTitle}
           </h3>
-          <button className="max-w-[20px] drop-shadow-xl" onClick={expandActivityDetails}>
+          <button className="max-w-[20px] shadow-xl" onClick={expandActivityDetails}>
             {expand.value ? (
               <ArrowUpIcon className="h-auto max-h-full max-w-full" />
             ) : (
@@ -102,7 +103,7 @@ function Activity({ activity, deleteActivity }: { activity: Activity; deleteActi
           </div>
           <CodeSegment element={element} />
           <div>
-            <button className="mb-[5px] mt-[5px] rounded-md bg-red-200 p-[5px] drop-shadow-xl" onClick={scrollIntoView}>
+            <button className="mb-[5px] mt-[5px] rounded-md bg-red-200 p-[5px] shadow-xl" onClick={scrollIntoView}>
               View
             </button>
           </div>
@@ -162,9 +163,10 @@ export default function Activities() {
 
   return (
     <div className="p-[10px]" data-section="actions">
-      <h1 className="text-lg">Latest actions</h1>
-      <div>
-        <button onClick={clearActions}>Clear actions</button>
+      <h1 className="text-center text-lg">Latest actions</h1>
+      <div className="mt-[10px] flex justify-between">
+        <Button className="ml-3px mr-[3px] flex-grow" text="Clear all" onClick={clearActions} />
+        <Button className="ml-3px mr-[3px] flex-grow" text="Get report" />
       </div>
       <div className="mb-[10px] mt-[10px]">
         {activities.value.map((activity, index) => {
