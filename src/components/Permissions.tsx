@@ -1,5 +1,5 @@
 import { useSignal } from "@preact/signals";
-import React, { useEffect } from "preact/compat";
+import React from "preact/compat";
 import { ResultAsync, resultAsync } from "../utils";
 import { AddIcon, ConfirmIcon, RemoveIcon } from "./Icons";
 
@@ -8,7 +8,7 @@ type Permissions = Permission[];
 
 function Permission({ permission, removePermission }: { permission: Permission; removePermission: () => Promise<void> }) {
   return (
-    <div className="m-[5px] grid grid-cols-[minmax(90%,_auto)_auto] grid-rows-[40px] text-base">
+    <div className="m-[10px] grid grid-cols-[minmax(95%,_auto)_5%] grid-rows-[40px] text-base">
       <div className="rounded-md bg-gray-400 p-[10px]">{permission.url}</div>
       <button onClick={removePermission} className="mb-[5px] ml-[3px] mt-[5px] outline-none">
         <RemoveIcon className="h-auto max-h-full max-w-full" />

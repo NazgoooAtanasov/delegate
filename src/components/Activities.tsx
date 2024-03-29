@@ -2,7 +2,7 @@ import { useSignal } from "@preact/signals";
 import React, { useEffect } from "preact/compat";
 import Prismjs from "prismjs";
 import { ResultAsync, resultAsync } from "../utils";
-import { RemoveIcon } from "./Icons";
+import { ArrowDownIcon, ArrowUpIcon, RemoveIcon } from "./Icons";
 Prismjs.manual = true;
 
 // @TODO: this is pretty much the same thing as AddActivity from eventHandler. FIX?
@@ -77,32 +77,32 @@ function Activity({ activity, deleteActivity }: { activity: Activity; deleteActi
 
   return (
     <>
-      <div class="grid max-h-[60px] grid-cols-[minmax(90%,_auto)_10%] grid-rows-[60px]">
-        <button
-          onClick={expandActivityDetails}
-          className="mb-[5px] mt-[5px] flex min-w-0 max-w-full justify-between rounded-md bg-gray-400 p-[10px] text-left text-lg outline-none"
-        >
-          <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
+      <div class="grid max-h-[60px] grid-cols-[minmax(95%,_auto)_5%] grid-rows-[60px]">
+        <div className="mb-[5px] mt-[5px] flex min-w-0 max-w-full justify-between rounded-md bg-gray-400 p-[10px] text-lg">
+          <h3 className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
             <span className="text-green-300">{activity.action}</span>:&nbsp;
             {activity.activityTitle}
-          </span>
-          <span>{expand.value ? "▲" : "▼"}</span>
-        </button>
+          </h3>
+          <button className="max-w-[20px] drop-shadow-xl" onClick={expandActivityDetails}>
+            {expand.value ? (
+              <ArrowUpIcon className="h-auto max-h-full max-w-full" />
+            ) : (
+              <ArrowDownIcon className="h-auto max-h-full max-w-full" />
+            )}
+          </button>
+        </div>
         <button onClick={deleteActivity} className="mb-[5px] ml-[3px] mt-[5px] outline-none">
           <RemoveIcon className="h-auto max-h-full max-w-full" />
         </button>
       </div>
       {expand.value ? (
         <div className="mb-[5px] mt-[5px] rounded-md bg-green-100 p-[10px]">
-          <div className="flex justify-between">
-            <div title={activity.url} className="overflow-hidden text-ellipsis">
-              at: {activity.url}
-            </div>
-            <div className="text-right text-gray-500"> {activity.action} </div>
+          <div title={activity.url} className="overflow-hidden text-ellipsis">
+            at: {activity.url}
           </div>
           <CodeSegment element={element} />
           <div>
-            <button className="mb-[5px] mt-[5px] rounded-md bg-red-200 p-[5px]" onClick={scrollIntoView}>
+            <button className="mb-[5px] mt-[5px] rounded-md bg-red-200 p-[5px] drop-shadow-xl" onClick={scrollIntoView}>
               View
             </button>
           </div>

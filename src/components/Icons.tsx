@@ -106,3 +106,65 @@ export function ConfirmIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+export function ArrowUpIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="60.861931mm"
+      height="35.129517mm"
+      viewBox="0 0 60.861931 35.129517"
+      version="1.1"
+      id="svg1"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs id="defs1"></defs>
+      <g id="layer1" transform="translate(-78.596471,-130.71177)">
+        <path
+          id="rect2"
+          d="m 101.65667,125.68166 a 6.4566455,6.4566455 45.595723 0 1 6.38917,6.52343 v 33.07207 a 6.5234271,6.5234271 135 0 1 -6.52343,6.52343 6.4566455,6.4566455 45.595723 0 1 -6.389163,-6.52343 v -33.07207 a 6.5234271,6.5234271 135 0 1 6.523423,-6.52343 z"
+          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:0.323001"
+          transform="matrix(-0.560166,0.560166,-0.70710678,-0.70710678,284.00134,196.54538)"
+        />
+        <path
+          id="rect2-0"
+          d="m 101.65667,125.68166 a 6.4566455,6.4566455 45.595723 0 1 6.38917,6.52343 v 33.07207 a 6.5234271,6.5234271 135 0 1 -6.52343,6.52343 6.4566455,6.4566455 45.595723 0 1 -6.389163,-6.52343 v -33.07207 a 6.5234271,6.5234271 135 0 1 6.523423,-6.52343 z"
+          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:0.323001"
+          transform="matrix(-0.560166,-0.560166,0.70710678,-0.70710678,47.892379,310.34184)"
+        />
+      </g>
+    </svg>
+  );
+}
+
+export function ArrowDownIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="60.851891mm"
+      height="35.639118mm"
+      viewBox="0 0 60.851891 35.639118"
+      version="1.1"
+      id="svg1"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs id="defs1"></defs>
+      <g id="layer1" transform="translate(-92.887912,-141.38665)">
+        <g id="g3" transform="rotate(180,111.09313,148.89573)">
+          <path
+            id="rect2"
+            d="m 101.65667,125.68166 a 6.4566455,6.4566455 45.595723 0 1 6.38917,6.52343 v 33.07207 a 6.5234271,6.5234271 135 0 1 -6.52343,6.52343 6.4566455,6.4566455 45.595723 0 1 -6.389163,-6.52343 v -33.07207 a 6.5234271,6.5234271 135 0 1 6.523423,-6.52343 z"
+            style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:0.323001"
+            transform="matrix(-0.57107563,0.54903963,-0.69306178,-0.72087819,273.12004,190.0328)"
+          />
+          <path
+            id="rect2-0"
+            d="m 101.65667,125.68166 a 6.4566455,6.4566455 45.595723 0 1 6.38917,6.52343 v 33.07207 a 6.5234271,6.5234271 135 0 1 -6.52343,6.52343 6.4566455,6.4566455 45.595723 0 1 -6.389163,-6.52343 v -33.07207 a 6.5234271,6.5234271 135 0 1 6.523423,-6.52343 z"
+            style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:0.323001"
+            transform="matrix(-0.54903963,-0.57107563,0.72087819,-0.69306178,34.818465,299.16318)"
+          />
+        </g>
+      </g>
+    </svg>
+  );
+}
