@@ -95,15 +95,15 @@ function Activity({ activity, deleteActivity }: { activity: Activity; deleteActi
       {expand.value ? (
         <div className="mb-[5px] mt-[5px] rounded-md bg-green-100 p-[10px]">
           <div className="flex justify-between">
-            <div title={activity.url || ""} className="overflow-hidden text-ellipsis">
-              at: {activity.url || ""}
+            <div title={activity.url} className="overflow-hidden text-ellipsis">
+              at: {activity.url}
             </div>
             <div className="text-right text-gray-500"> {activity.action} </div>
           </div>
           <CodeSegment element={element} />
           <div>
             <button className="mb-[5px] mt-[5px] rounded-md bg-red-200 p-[5px]" onClick={scrollIntoView}>
-              Scroll into view
+              View
             </button>
           </div>
         </div>
