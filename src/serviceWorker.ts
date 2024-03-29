@@ -12,7 +12,7 @@ import {
 let eventHandler: EventHandler | null = null;
 
 chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
-  if (changeInfo.status !== "loading") return;
+  if (changeInfo.status !== "complete") return;
 
   if (!eventHandler) {
     try {
@@ -42,8 +42,8 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
 
   if (permission) {
     try {
-      const activeScripts = await chrome.scripting.getRegisteredContentScripts();
-      if (!activeScripts.find((script) => script.id === "activityTracker")) {
+      const activeScripts = await chrome.scripting.getRegisteredContentScripts({ ids: ["activityTracker"] });
+      if (activeScripts.length <= 0) {
         await chrome.scripting.registerContentScripts([
           {
             id: "activityTracker",
