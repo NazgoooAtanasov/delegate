@@ -5,13 +5,19 @@ chrome.runtime.onMessage.addListener((message: { eventName: string } & Record<st
       selector: string;
     };
 
-    const domElement = document.querySelector(selector);
+    const domElement: HTMLElement | null = document.querySelector(selector);
     if (!domElement) {
       console.warn("Element not found", selector);
       return false;
     }
 
     domElement.scrollIntoView({ behavior: "smooth", block: "center" });
+    domElement.style.padding = "20px";
+    domElement.style.background = "red";
+    setTimeout(() => {
+      domElement.style.padding = "";
+      domElement.style.background = "";
+    }, 3000);
   }
   return false;
 });
