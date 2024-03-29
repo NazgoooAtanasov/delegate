@@ -14,6 +14,7 @@ type ActivityAdded = {
   elementName: string;
   attributes: string[][];
   selector: string;
+  id: number;
 };
 
 type Activity = Omit<ActivityAdded, "eventName">;
@@ -95,7 +96,7 @@ function Activity({ activity, deleteActivity }: { activity: Activity; deleteActi
         <div className="mb-[5px] mt-[5px] rounded-md bg-green-100 p-[10px]">
           <div className="flex justify-between">
             <div title={activity.url || ""} className="overflow-hidden text-ellipsis">
-              {activity.url || ""}
+              at: {activity.url || ""}
             </div>
             <div className="text-right text-gray-500"> {activity.action} </div>
           </div>
@@ -121,14 +122,21 @@ export default function Activities() {
     activities.value = [];
   }
 
-  function deleteActivity(index: number) {
-    activities.value = activities.value.filter((_, i) => i !== index);
+  async function deleteActivity(id: number) {
+    const result = (await resultAsync(chrome.runtime.sendMessage({ eventName: "removeActivity", id }), "bare")) as ResultAsync<number>;
+
+    if (result.error) {
+      console.error("There was an error deleting activity", result.error);
+      return;
+    }
+
+    activities.value = activities.value.filter((activity) => activity.id !== id);
   }
 
-  function updateActivities({ eventName, action, url, activityTitle, elementName, attributes, selector }: ActivityAdded) {
+  function updateActivities({ id, eventName, action, url, activityTitle, elementName, attributes, selector }: ActivityAdded) {
     if (eventName !== "activityAdded") return false;
 
-    activities.value = [...activities.value, { action, url, activityTitle, elementName, attributes, selector }];
+    activities.value = [...activities.value, { action, url, activityTitle, elementName, attributes, selector, id }];
 
     return false;
   }
@@ -160,7 +168,7 @@ export default function Activities() {
       </div>
       <div className="mb-[10px] mt-[10px]">
         {activities.value.map((activity, index) => {
-          return <Activity key={index} activity={activity} deleteActivity={() => deleteActivity(index)} />;
+          return <Activity key={index} activity={activity} deleteActivity={() => deleteActivity(activity.id)} />;
         })}
       </div>
     </div>

@@ -5,6 +5,7 @@ import {
   GetActivites,
   GetURLPermissions,
   RemoveActivities,
+  RemoveActivity,
   RemoveURLPermission,
 } from "./serviceWorkerUtils/eventHandler";
 
@@ -80,7 +81,7 @@ chrome.tabs.onUpdated.addListener(async (tabId) => {
 
 chrome.runtime.onMessage.addListener(
   (
-    message: AddURLPermission | GetURLPermissions | RemoveURLPermission | AddActivity | GetActivites | RemoveActivities,
+    message: AddURLPermission | GetURLPermissions | RemoveURLPermission | AddActivity | RemoveActivity | GetActivites | RemoveActivities,
     _,
     sendResponse: (_: unknown) => void,
   ) => {
@@ -90,7 +91,8 @@ chrome.runtime.onMessage.addListener(
       message.eventName !== "removeURLPermission" &&
       message.eventName !== "addActivity" &&
       message.eventName !== "getActivities" &&
-      message.eventName !== "removeActivities"
+      message.eventName !== "removeActivities" &&
+      message.eventName !== "removeActivity"
     ) {
       return false;
     }
@@ -127,6 +129,14 @@ chrome.runtime.onMessage.addListener(
           chrome.runtime.sendMessage({ eventName: "activityAdded", ...result.data });
           sendResponse(result);
         })
+        .catch((err) => sendResponse(err));
+      return true;
+    }
+
+    if (message.eventName === "removeActivity") {
+      eventHandler
+        ?.removeActivity(message)
+        .then((result) => sendResponse(result))
         .catch((err) => sendResponse(err));
       return true;
     }

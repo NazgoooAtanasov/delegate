@@ -37,6 +37,11 @@ export type AddActivity = {
   selector: string;
 };
 
+export type RemoveActivity = {
+  eventName: "removeActivity";
+  id: number;
+};
+
 export default class EventHandler {
   private db: IDBDatabase | null = null;
 
@@ -165,7 +170,7 @@ export default class EventHandler {
     elementName,
     attributes,
     selector,
-  }: AddActivity): Promise<ResultAsync<Omit<AddActivity, "eventName">>> {
+  }: AddActivity): Promise<ResultAsync<Omit<AddActivity, "eventName"> & { id: number }>> {
     if (!this.db) {
       await this.initialize();
     }
@@ -185,7 +190,27 @@ export default class EventHandler {
       const request = activities?.add(activity);
 
       request?.addEventListener("success", () => {
-        res({ data: activity });
+        res({ data: { ...activity, id: request.result as number } });
+      });
+
+      request?.addEventListener("error", (err) => {
+        rej({ error: err });
+      });
+    });
+  }
+
+  async removeActivity(event: RemoveActivity) {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    return new Promise((res, rej) => {
+      const transaction = this.db?.transaction("activites", "readwrite");
+      const activities = transaction?.objectStore("activites");
+      const request = activities?.delete(event.id);
+
+      request?.addEventListener("success", () => {
+        res({ data: event.id });
       });
 
       request?.addEventListener("error", (err) => {
