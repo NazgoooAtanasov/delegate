@@ -72,23 +72,21 @@ export default function Permissions() {
     permissions.value = permissions.value.filter((permission) => permission.id !== id);
   }
 
-  useEffect(() => {
-    (async () => {
-      const response: ResultAsync<Permissions> = (await resultAsync(
-        chrome.runtime.sendMessage({
-          eventName: "getURLPermissions",
-        }),
-        "bare",
-      )) as ResultAsync<Permissions>;
+  (async () => {
+    const response: ResultAsync<Permissions> = (await resultAsync(
+      chrome.runtime.sendMessage({
+        eventName: "getURLPermissions",
+      }),
+      "bare",
+    )) as ResultAsync<Permissions>;
 
-      if (response.error) {
-        console.error("There was an error getting the permissions", response.error);
-        return;
-      }
+    if (response.error) {
+      console.error("There was an error getting the permissions", response.error);
+      return;
+    }
 
-      permissions.value = response.data!;
-    })();
-  }, []);
+    permissions.value = response.data!;
+  })();
 
   return (
     <div>

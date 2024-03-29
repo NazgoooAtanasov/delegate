@@ -1,7 +1,7 @@
 import { useSignal } from "@preact/signals";
 import React, { useEffect } from "preact/compat";
 import Prismjs from "prismjs";
-import { resultAsync } from "../utils";
+import { ResultAsync, resultAsync } from "../utils";
 import { RemoveIcon } from "./Icons";
 Prismjs.manual = true;
 
@@ -114,20 +114,21 @@ function Activity({ activity, deleteActivity }: { activity: Activity; deleteActi
 }
 
 export default function Activities() {
-  const activity = useSignal<Activities>([]);
+  const activities = useSignal<Activities>([]);
 
   function clearActions() {
-    activity.value = [];
+    chrome.runtime.sendMessage({ eventName: "removeActivities" });
+    activities.value = [];
   }
 
   function deleteActivity(index: number) {
-    activity.value = activity.value.filter((_, i) => i !== index);
+    activities.value = activities.value.filter((_, i) => i !== index);
   }
 
   function updateActivities({ eventName, action, url, activityTitle, elementName, attributes, selector }: ActivityAdded) {
     if (eventName !== "activityAdded") return false;
 
-    activity.value = [...activity.value, { action, url, activityTitle, elementName, attributes, selector }];
+    activities.value = [...activities.value, { action, url, activityTitle, elementName, attributes, selector }];
 
     return false;
   }
@@ -137,6 +138,20 @@ export default function Activities() {
     return () => chrome.runtime.onMessage.removeListener(updateActivities);
   });
 
+  (async () => {
+    const result: ResultAsync<Activity[]> = (await resultAsync(
+      chrome.runtime.sendMessage({ eventName: "getActivities" }),
+      "bare",
+    )) as ResultAsync<Activity[]>;
+
+    if (result.error) {
+      console.error("There was an error getting activities", result.error);
+      return;
+    }
+
+    activities.value = result.data!;
+  })();
+
   return (
     <div className="p-[10px]" data-section="actions">
       <h1 className="text-lg">Latest actions</h1>
@@ -144,7 +159,7 @@ export default function Activities() {
         <button onClick={clearActions}>Clear actions</button>
       </div>
       <div className="mb-[10px] mt-[10px]">
-        {activity.value.map((activity, index) => {
+        {activities.value.map((activity, index) => {
           return <Activity key={index} activity={activity} deleteActivity={() => deleteActivity(index)} />;
         })}
       </div>

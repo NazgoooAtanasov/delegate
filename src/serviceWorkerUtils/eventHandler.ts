@@ -19,6 +19,14 @@ export type GetURLPermission = {
   url: string;
 };
 
+export type GetActivites = {
+  eventName: "getActivities";
+};
+
+export type RemoveActivities = {
+  eventName: "removeActivities";
+};
+
 export type AddActivity = {
   eventName: "addActivity";
   action: "click";
@@ -178,6 +186,46 @@ export default class EventHandler {
 
       request?.addEventListener("success", () => {
         res({ data: activity });
+      });
+
+      request?.addEventListener("error", (err) => {
+        rej({ error: err });
+      });
+    });
+  }
+
+  async getActivities(_: GetActivites): Promise<ResultAsync<Omit<AddActivity, "eventName">[]>> {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    return new Promise((res, rej) => {
+      const transaction = this.db?.transaction("activites", "readonly");
+      const activities = transaction?.objectStore("activites");
+      const request = activities?.getAll();
+
+      request?.addEventListener("success", () => {
+        res({ data: request.result });
+      });
+
+      request?.addEventListener("error", (err) => {
+        rej({ error: err });
+      });
+    });
+  }
+
+  async removeAllActivites(_: RemoveActivities) {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    return new Promise((res, rej) => {
+      const transaction = this.db?.transaction("activites", "readwrite");
+      const activities = transaction?.objectStore("activites");
+      const request = activities?.clear();
+
+      request?.addEventListener("success", () => {
+        res({ data: request.result });
       });
 
       request?.addEventListener("error", (err) => {

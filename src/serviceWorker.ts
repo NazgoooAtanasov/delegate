@@ -1,5 +1,12 @@
 import { EventHandler } from "./serviceWorkerUtils";
-import { AddActivity, AddURLPermission, GetURLPermissions, RemoveURLPermission } from "./serviceWorkerUtils/eventHandler";
+import {
+  AddActivity,
+  AddURLPermission,
+  GetActivites,
+  GetURLPermissions,
+  RemoveActivities,
+  RemoveURLPermission,
+} from "./serviceWorkerUtils/eventHandler";
 
 let eventHandler: EventHandler | null = null;
 
@@ -72,12 +79,18 @@ chrome.tabs.onUpdated.addListener(async (tabId) => {
 });
 
 chrome.runtime.onMessage.addListener(
-  (message: AddURLPermission | GetURLPermissions | RemoveURLPermission | AddActivity, _, sendResponse) => {
+  (
+    message: AddURLPermission | GetURLPermissions | RemoveURLPermission | AddActivity | GetActivites | RemoveActivities,
+    _,
+    sendResponse: (_: unknown) => void,
+  ) => {
     if (
       message.eventName !== "getURLPermissions" &&
       message.eventName !== "addURLPermission" &&
       message.eventName !== "removeURLPermission" &&
-      message.eventName !== "addActivity"
+      message.eventName !== "addActivity" &&
+      message.eventName !== "getActivities" &&
+      message.eventName !== "removeActivities"
     ) {
       return false;
     }
@@ -116,6 +129,22 @@ chrome.runtime.onMessage.addListener(
         })
         .catch((err) => sendResponse(err));
       return true;
+    }
+
+    if (message.eventName === "getActivities") {
+      eventHandler
+        ?.getActivities(message)
+        .then((result) => sendResponse(result))
+        .catch((err) => sendResponse(err));
+      return true;
+    }
+
+    if (message.eventName === "removeActivities") {
+      eventHandler
+        ?.removeAllActivites(message)
+        .then((result) => sendResponse(result))
+        .catch((err) => sendResponse(err));
+      return false;
     }
   },
 );
