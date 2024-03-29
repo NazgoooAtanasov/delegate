@@ -25,17 +25,19 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
 
   const url = tab.url!;
   let permission: { id: number; url: string } | undefined = undefined;
+  let permissions: { id: number; url: string }[] = [];
 
   try {
     const urlOjb = new URL(url);
-    const result = await eventHandler?.getURLPermission({ eventName: "getURLPermission", url: urlOjb.hostname });
+    const result = await eventHandler?.getURLPermissions({ eventName: "getURLPermissions" });
 
     if (result?.error) {
       console.error("There was an error getting the permission", result.error);
       return;
     }
 
-    permission = result?.data;
+    permission = result?.data?.find((permission) => permission.url === urlOjb.hostname);
+    permissions = result?.data || [];
   } catch (err) {
     console.error("There was an error getting the permission", err);
   }
@@ -49,7 +51,7 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
             id: "activityTracker",
             js: ["bundle/activityTracker.js"],
             persistAcrossSessions: true,
-            matches: ["https://*/*"],
+            matches: permissions.map((permission) => `https://${permission.url}/*`), // ["https://*/*"],
             runAt: "document_end",
           },
         ]);
