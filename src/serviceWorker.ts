@@ -10,6 +10,14 @@ import {
 } from "./serviceWorkerUtils/eventHandler";
 
 let eventHandler: EventHandler | null = null;
+(async () => {
+  try {
+    eventHandler = new EventHandler();
+    await eventHandler.initialize();
+  } catch (err) {
+    console.error("There was an error initializing the event handler", err);
+  }
+})();
 
 chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
   if (changeInfo.status !== "complete") return;
@@ -58,17 +66,6 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
       }
     } catch (err) {
       console.error("There was an error registering content scripts", err);
-    }
-  }
-});
-
-chrome.runtime.onInstalled.addListener(async (_) => {
-  if (!eventHandler) {
-    try {
-      eventHandler = new EventHandler();
-      await eventHandler.initialize();
-    } catch (err) {
-      console.error("There was an error initializing the event handler", err);
     }
   }
 });
