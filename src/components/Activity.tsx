@@ -81,7 +81,7 @@ export default function Activity({ activity, deleteActivity }: { activity: Activ
     <>
       <div class="grid max-h-[60px] grid-cols-[minmax(95%,_auto)_5%] grid-rows-[60px]">
         <div className="mb-[5px] mt-[5px] flex min-w-0 max-w-full justify-between rounded-md bg-gray-400 p-[10px] text-lg">
-          <h3 className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
+          <h3 className="flex min-w-0 max-w-full">
             <span className="text-green-300">{activity.action}</span>:&nbsp;
             {edit.value ? (
               <input
@@ -91,7 +91,10 @@ export default function Activity({ activity, deleteActivity }: { activity: Activ
                 placeholder="Edit title..."
               />
             ) : (
-              <button onClick={toggleEditTitle} className="rounded-md pl-[5px] pr-[5px] transition hover:bg-gray-500">
+              <button
+                onClick={toggleEditTitle}
+                className="overflow-hidden text-ellipsis whitespace-nowrap rounded-md pl-[5px] pr-[5px] transition hover:bg-gray-500"
+              >
                 {activity.activityTitle}
               </button>
             )}
