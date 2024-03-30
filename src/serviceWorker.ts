@@ -8,6 +8,7 @@ import {
   RemoveActivity,
   RemoveURLPermission,
 } from "./serviceWorkerUtils/eventHandler";
+import { resultAsync } from "./utils";
 
 let eventHandler: EventHandler | null = null;
 (async () => {
@@ -18,6 +19,53 @@ let eventHandler: EventHandler | null = null;
     console.error("There was an error initializing the event handler", err);
   }
 })();
+
+function closeSidePanel(id: number | undefined = undefined) {
+  chrome.sidePanel.setOptions({
+    tabId: id,
+    enabled: false,
+  });
+}
+
+chrome.tabs.onActivated.addListener(async (tab) => {
+  console.log(tab);
+  const tabs = await resultAsync(
+    chrome.tabs.query({
+      active: true,
+      windowId: tab.windowId,
+    }),
+    "resultfiy",
+  );
+
+  if (tabs.error) {
+    console.error("There was an error getting the current tab", tabs.error);
+    closeSidePanel();
+    return;
+  }
+
+  const [currentTab] = tabs.data ?? [];
+  if (!currentTab) {
+    console.error("There is no active tab");
+    closeSidePanel();
+    return;
+  }
+
+  if (currentTab.id !== tab.tabId || !currentTab.url) {
+    closeSidePanel(currentTab.id);
+    return;
+  }
+
+  const permission = await eventHandler?.getURLPermission({ eventName: "getURLPermission", url: new URL(currentTab.url).hostname });
+  if (permission?.error) {
+    console.error("There was an error getting the permission", permission.error);
+    closeSidePanel(currentTab.id);
+    return;
+  }
+
+  if (!permission?.data) {
+    closeSidePanel(currentTab.id);
+  }
+});
 
 chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
   if (changeInfo.status !== "complete") return;
