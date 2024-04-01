@@ -71,10 +71,21 @@ export default function Activity({ activity, deleteActivity }: { activity: Activ
     toggleEditTitle();
   }
 
+  function onElementUnfocus() {
+    toggleEditTitle();
+  }
+
   useEffect(() => {
     if (edit.value) {
       (inputField!.current! as HTMLInputElement).focus();
+      (inputField!.current! as HTMLInputElement).addEventListener("blur", onElementUnfocus);
     }
+
+    return () => {
+      if (inputField?.current) {
+        (inputField.current as HTMLInputElement).removeEventListener("blur", onElementUnfocus);
+      }
+    };
   }, [edit.value]);
 
   return (

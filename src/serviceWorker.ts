@@ -28,7 +28,6 @@ function closeSidePanel(id: number | undefined = undefined) {
 }
 
 chrome.tabs.onActivated.addListener(async (tab) => {
-  console.log(tab);
   const tabs = await resultAsync(
     chrome.tabs.query({
       active: true,

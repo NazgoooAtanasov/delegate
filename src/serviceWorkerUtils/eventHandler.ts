@@ -1,4 +1,5 @@
-import { ResultAsync } from "../utils";
+import { ResultAsync, resultAsync } from "../utils";
+import Database, { Storage } from "./database";
 
 export type AddURLPermission = {
   eventName: "addURLPermission";
@@ -43,124 +44,61 @@ export type RemoveActivity = {
 };
 
 export default class EventHandler {
-  private db: IDBDatabase | null = null;
+  private db: Storage | null = null;
 
   constructor() {}
 
   async initialize() {
-    return new Promise((res, rej) => {
-      const dbOpenRequest = indexedDB.open("delegate", 2);
-
-      dbOpenRequest.addEventListener("success", (_) => {
-        this.db = dbOpenRequest.result;
-        res(dbOpenRequest.result);
-      });
-
-      dbOpenRequest.addEventListener("error", (err) => rej(err));
-
-      dbOpenRequest.addEventListener("upgradeneeded", () => {
-        this.db = dbOpenRequest.result;
-
-        if (!this.db.objectStoreNames.contains("permissions")) {
-          const permissions = this.db.createObjectStore("permissions", {
-            keyPath: "id",
-            autoIncrement: true,
-          });
-          permissions.createIndex("url", "url", { unique: true });
-        }
-
-        if (!this.db.objectStoreNames.contains("activites")) {
-          this.db.createObjectStore("activites", {
-            keyPath: "id",
-            autoIncrement: true,
-          });
-        }
-
-        res(this.db);
-      });
-    });
+    this.db = new Database();
+    await this.db.conncect();
   }
 
-  async addURLPermission(event: AddURLPermission): Promise<ResultAsync<IDBValidKey>> {
+  async addURLPermission(event: AddURLPermission): Promise<ResultAsync<number>> {
     if (!this.db) {
-      await this.initialize();
+      try {
+        await this.initialize();
+      } catch (e) {
+        return { error: e };
+      }
     }
-    return new Promise((res, rej) => {
-      const transaction = this.db?.transaction("permissions", "readwrite");
-      const permissions = transaction?.objectStore("permissions");
 
-      const request = permissions?.add({ url: event.url });
-
-      request?.addEventListener("success", () => {
-        res({ data: request.result });
-      });
-
-      request?.addEventListener("error", (err) => {
-        rej({ error: err });
-      });
-    });
+    return await resultAsync(this.db!.add("permissions", { url: event.url }), "resultfiy");
   }
 
   async getURLPermissions(_: GetURLPermissions): Promise<ResultAsync<{ id: number; url: string }[]>> {
     if (!this.db) {
-      await this.initialize();
+      try {
+        await this.initialize();
+      } catch (e) {
+        return { error: e };
+      }
     }
 
-    return new Promise((res, rej) => {
-      const transaction = this.db?.transaction("permissions", "readonly");
-      const permissions = transaction?.objectStore("permissions");
-
-      const request = permissions?.getAll();
-
-      request?.addEventListener("success", () => {
-        res({ data: request.result });
-      });
-
-      request?.addEventListener("error", (err) => {
-        rej({ error: err });
-      });
-    });
+    return await resultAsync(this.db!.getAll("permissions"), "resultfiy");
   }
 
   async removeURLPermission(event: RemoveURLPermission): Promise<ResultAsync<number>> {
     if (!this.db) {
-      await this.initialize();
+      try {
+        await this.initialize();
+      } catch (e) {
+        return { error: e };
+      }
     }
 
-    return new Promise((res, rej) => {
-      const transaction = this.db?.transaction("permissions", "readwrite");
-      const permissions = transaction?.objectStore("permissions");
-
-      const request = permissions?.delete(event.id);
-
-      request?.addEventListener("success", () => {
-        res({ data: event.id });
-      });
-
-      request?.addEventListener("error", (err) => {
-        rej({ error: err });
-      });
-    });
+    return await resultAsync(this.db!.remove("permissions", event.id), "resultfiy");
   }
 
   async getURLPermission(event: GetURLPermission): Promise<ResultAsync<{ id: number; url: string }>> {
     if (!this.db) {
-      await this.initialize();
+      try {
+        await this.initialize();
+      } catch (e) {
+        return { error: e };
+      }
     }
 
-    return new Promise((res, rej) => {
-      const transaction = this.db?.transaction("permissions", "readonly");
-      const permissions = transaction?.objectStore("permissions");
-      const permissionQuery = permissions?.index("url").get(event.url);
-
-      permissionQuery?.addEventListener("success", () => {
-        res({ data: permissionQuery?.result });
-      });
-
-      permissionQuery?.addEventListener("error", (err) => {
-        rej({ error: err });
-      });
-    });
+    return await resultAsync(this.db!.findIndex("permissions", "url", event.url), "resultfiy");
   }
 
   async addActivity({
@@ -172,90 +110,57 @@ export default class EventHandler {
     selector,
   }: AddActivity): Promise<ResultAsync<Omit<AddActivity, "eventName"> & { id: number }>> {
     if (!this.db) {
-      await this.initialize();
+      try {
+        await this.initialize();
+      } catch (e) {
+        return { error: e };
+      }
     }
 
-    return new Promise((res, rej) => {
-      const transaction = this.db?.transaction("activites", "readwrite");
-      const activities = transaction?.objectStore("activites");
-      const activity = {
-        action,
-        url,
-        activityTitle,
-        elementName,
-        attributes,
-        selector,
-      };
+    const result = await resultAsync(
+      this.db!.add("activites", { action, url, activityTitle, elementName, attributes, selector }),
+      "resultfiy",
+    );
+    if (result.error || !result.data) {
+      return { error: result.error };
+    }
 
-      const request = activities?.add(activity);
-
-      request?.addEventListener("success", () => {
-        res({ data: { ...activity, id: request.result as number } });
-      });
-
-      request?.addEventListener("error", (err) => {
-        rej({ error: err });
-      });
-    });
+    return { data: { id: result.data, action, url, activityTitle, elementName, attributes, selector } };
   }
 
-  async removeActivity(event: RemoveActivity) {
+  async removeActivity(event: RemoveActivity): Promise<ResultAsync<number>> {
     if (!this.db) {
-      await this.initialize();
+      try {
+        await this.initialize();
+      } catch (e) {
+        return { error: e };
+      }
     }
 
-    return new Promise((res, rej) => {
-      const transaction = this.db?.transaction("activites", "readwrite");
-      const activities = transaction?.objectStore("activites");
-      const request = activities?.delete(event.id);
-
-      request?.addEventListener("success", () => {
-        res({ data: event.id });
-      });
-
-      request?.addEventListener("error", (err) => {
-        rej({ error: err });
-      });
-    });
+    return await resultAsync(this.db!.remove("activites", event.id), "resultfiy");
   }
 
   async getActivities(_: GetActivites): Promise<ResultAsync<Omit<AddActivity, "eventName">[]>> {
     if (!this.db) {
-      await this.initialize();
+      try {
+        await this.initialize();
+      } catch (e) {
+        return { error: e };
+      }
     }
 
-    return new Promise((res, rej) => {
-      const transaction = this.db?.transaction("activites", "readonly");
-      const activities = transaction?.objectStore("activites");
-      const request = activities?.getAll();
-
-      request?.addEventListener("success", () => {
-        res({ data: request.result });
-      });
-
-      request?.addEventListener("error", (err) => {
-        rej({ error: err });
-      });
-    });
+    return await resultAsync(this.db!.getAll("activites"), "resultfiy");
   }
 
   async removeAllActivites(_: RemoveActivities) {
     if (!this.db) {
-      await this.initialize();
+      try {
+        await this.initialize();
+      } catch (e) {
+        return { error: e };
+      }
     }
 
-    return new Promise((res, rej) => {
-      const transaction = this.db?.transaction("activites", "readwrite");
-      const activities = transaction?.objectStore("activites");
-      const request = activities?.clear();
-
-      request?.addEventListener("success", () => {
-        res({ data: request.result });
-      });
-
-      request?.addEventListener("error", (err) => {
-        rej({ error: err });
-      });
-    });
+    return await resultAsync(this.db!.removeAll("activites"), "resultfiy");
   }
 }
