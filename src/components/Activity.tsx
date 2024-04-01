@@ -101,6 +101,7 @@ export default function Activity({ activity, deleteActivity }: { activity: Activ
             {edit.value ? (
               <input
                 ref={inputField}
+                value={activity.activityTitle}
                 className="ml-[5px] mr-[5px] bg-inherit outline-none placeholder:text-gray-800"
                 type="text"
                 placeholder="Edit title..."
