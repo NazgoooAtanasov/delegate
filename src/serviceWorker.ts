@@ -7,6 +7,7 @@ import {
   RemoveActivities,
   RemoveActivity,
   RemoveURLPermission,
+  UpdateActivity,
 } from "./serviceWorkerUtils/eventHandler";
 import { resultAsync } from "./utils";
 
@@ -127,7 +128,15 @@ chrome.tabs.onUpdated.addListener(async (tabId) => {
 
 chrome.runtime.onMessage.addListener(
   (
-    message: AddURLPermission | GetURLPermissions | RemoveURLPermission | AddActivity | RemoveActivity | GetActivites | RemoveActivities,
+    message:
+      | AddURLPermission
+      | GetURLPermissions
+      | RemoveURLPermission
+      | AddActivity
+      | RemoveActivity
+      | GetActivites
+      | RemoveActivities
+      | UpdateActivity,
     _,
     sendResponse: (_: unknown) => void,
   ) => {
@@ -138,7 +147,8 @@ chrome.runtime.onMessage.addListener(
       message.eventName !== "addActivity" &&
       message.eventName !== "getActivities" &&
       message.eventName !== "removeActivities" &&
-      message.eventName !== "removeActivity"
+      message.eventName !== "removeActivity" &&
+      message.eventName !== "updateActivity"
     ) {
       return false;
     }
@@ -201,6 +211,14 @@ chrome.runtime.onMessage.addListener(
         .then((result) => sendResponse(result))
         .catch((err) => sendResponse(err));
       return false;
+    }
+
+    if (message.eventName === "updateActivity") {
+      eventHandler
+        ?.updateActivity(message)
+        .then((result) => sendResponse(result))
+        .catch((err) => sendResponse(err));
+      return true;
     }
   },
 );

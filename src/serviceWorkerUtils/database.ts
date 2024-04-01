@@ -4,6 +4,7 @@ export type Storage = {
   find<T>(storage: string, id: number): Promise<T>;
   findIndex<T, K extends IDBValidKey>(storage: string, index: string, key: K): Promise<T>;
   add<T>(storage: string, data: T): Promise<number>;
+  update<T>(storage: string, data: T): Promise<void>;
   remove(storage: string, id: number): Promise<number>;
   removeAll(storage: string): Promise<void>;
 };
@@ -104,6 +105,22 @@ export default class Database implements Storage {
 
       request?.addEventListener("success", () => {
         res(request.result as number);
+      });
+
+      request?.addEventListener("error", (err) => {
+        rej(err);
+      });
+    });
+  }
+
+  async update<T>(storage: string, data: T): Promise<void> {
+    return new Promise((res, rej) => {
+      const transaction = this.db?.transaction(storage, "readwrite");
+      const objectStore = transaction?.objectStore(storage);
+      const request = objectStore?.put(data);
+
+      request?.addEventListener("success", () => {
+        res();
       });
 
       request?.addEventListener("error", (err) => {

@@ -3,7 +3,7 @@ import { ArrowDownIcon, ArrowUpIcon, ConfirmIcon, RemoveIcon } from "./Icons";
 import { type Activity } from "./Activities";
 import Prismjs from "prismjs";
 import { useSignal } from "@preact/signals";
-import { resultAsync } from "../utils";
+import { ResultAsync, resultAsync } from "../utils";
 
 Prismjs.manual = true;
 function CodeSegment({ element }: { element: { elementName: string; attributes: string[][] } }) {
@@ -67,25 +67,29 @@ export default function Activity({ activity, deleteActivity }: { activity: Activ
     edit.value = !edit.value;
   }
 
-  function saveTitle() {
-    toggleEditTitle();
-  }
+  async function saveTitle() {
+    const result = (await resultAsync(
+      chrome.runtime.sendMessage({
+        eventName: "updateActivity",
+        id: activity.id,
+        title: (inputField!.current! as HTMLInputElement).value,
+      }),
+      "bare",
+    )) as ResultAsync<void>;
 
-  function onElementUnfocus() {
+    if (result.error && !result.data) {
+      console.warn("There was an error updating activity", result.error);
+      return;
+    }
+
+    activity.activityTitle = (inputField!.current! as HTMLInputElement).value;
     toggleEditTitle();
   }
 
   useEffect(() => {
     if (edit.value) {
       (inputField!.current! as HTMLInputElement).focus();
-      (inputField!.current! as HTMLInputElement).addEventListener("blur", onElementUnfocus);
     }
-
-    return () => {
-      if (inputField?.current) {
-        (inputField.current as HTMLInputElement).removeEventListener("blur", onElementUnfocus);
-      }
-    };
   }, [edit.value]);
 
   return (
@@ -119,7 +123,7 @@ export default function Activity({ activity, deleteActivity }: { activity: Activ
           </button>
         </div>
         {edit.value ? (
-          <button onClick={saveTitle} className="mb-[5px] ml-[3px] mt-[5px] outline-none">
+          <button onClick={() => saveTitle()} className="mb-[5px] ml-[3px] mt-[5px] outline-none">
             <ConfirmIcon className="h-auto max-h-full max-w-full" />
           </button>
         ) : (

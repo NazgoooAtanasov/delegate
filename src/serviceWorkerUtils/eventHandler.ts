@@ -28,6 +28,12 @@ export type RemoveActivities = {
   eventName: "removeActivities";
 };
 
+export type UpdateActivity = {
+  eventName: "updateActivity";
+  id: number;
+  title?: string;
+};
+
 export type AddActivity = {
   eventName: "addActivity";
   action: "click";
@@ -162,5 +168,29 @@ export default class EventHandler {
     }
 
     return await resultAsync(this.db!.removeAll("activites"), "resultfiy");
+  }
+
+  async updateActivity(event: UpdateActivity): Promise<ResultAsync<void>> {
+    if (!this.db) {
+      try {
+        await this.initialize();
+      } catch (e) {
+        return { error: e };
+      }
+    }
+
+    const result = await resultAsync(this.db!.find<Omit<AddActivity, "eventName"> & { id: number }>("activites", event.id), "resultfiy");
+    if (result.error && !result.data) {
+      return { error: result.error };
+    }
+
+    const data = result.data!;
+
+    if (event.title) {
+      data.activityTitle = event.title;
+      return await resultAsync(this.db!.update("activites", data), "resultfiy");
+    }
+
+    return { data: undefined };
   }
 }
