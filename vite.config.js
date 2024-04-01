@@ -1,9 +1,14 @@
 import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
 import prismjs from 'vite-plugin-prismjs'
+import checker from 'vite-plugin-checker';
 
 export default defineConfig({
-  plugins: [prismjs({ languages: ['markup'], theme: 'okaidia', css: true }), preact()],
+  plugins: [
+    checker({typescript: true}),
+    prismjs({ languages: ['markup'], theme: 'okaidia', css: true }),
+    preact()
+  ],
   build: {
     minify: false,
     target: 'modules',

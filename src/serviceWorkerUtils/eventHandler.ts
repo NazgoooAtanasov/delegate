@@ -1,5 +1,4 @@
-import { Activities, Activity, Missions } from "../entities";
-import { URLPermission, URLPermissions } from "../entities/persmission";
+import { URLPermission, URLPermissions, Activities, Activity, Missions } from "../entities";
 import { ResultAsync, resultAsync } from "../utils";
 import Database, { Storage } from "./database";
 
