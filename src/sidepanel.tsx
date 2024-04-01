@@ -1,6 +1,7 @@
 import { render } from "preact";
 import React, { useEffect } from "preact/compat";
-import Activities, { type Activities as ActivitiesType } from "./components/Activities";
+import Activities from "./components/Activities";
+import { type Activities as ActivitiesType } from "./entities";
 import { useSignal } from "@preact/signals";
 
 function SidePanel() {

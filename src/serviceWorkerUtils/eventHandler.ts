@@ -1,3 +1,5 @@
+import { Activities, Activity, Missions } from "../entities";
+import { URLPermission, URLPermissions } from "../entities/persmission";
 import { ResultAsync, resultAsync } from "../utils";
 import Database, { Storage } from "./database";
 
@@ -38,15 +40,19 @@ export type AddActivity = {
   eventName: "addActivity";
   action: "click";
   url: string;
-  activityTitle?: string;
+  activityTitle: string;
   elementName: string;
-  attributes: string;
+  attributes: string[][];
   selector: string;
 };
 
 export type RemoveActivity = {
   eventName: "removeActivity";
   id: number;
+};
+
+export type StartMission = {
+  eventName: "startMission";
 };
 
 export default class EventHandler {
@@ -71,7 +77,7 @@ export default class EventHandler {
     return await resultAsync(this.db!.add("permissions", { url: event.url }), "resultfiy");
   }
 
-  async getURLPermissions(_: GetURLPermissions): Promise<ResultAsync<{ id: number; url: string }[]>> {
+  async getURLPermissions(_: GetURLPermissions): Promise<ResultAsync<URLPermissions>> {
     if (!this.db) {
       try {
         await this.initialize();
@@ -95,7 +101,7 @@ export default class EventHandler {
     return await resultAsync(this.db!.remove("permissions", event.id), "resultfiy");
   }
 
-  async getURLPermission(event: GetURLPermission): Promise<ResultAsync<{ id: number; url: string }>> {
+  async getURLPermission(event: GetURLPermission): Promise<ResultAsync<URLPermission>> {
     if (!this.db) {
       try {
         await this.initialize();
@@ -107,14 +113,7 @@ export default class EventHandler {
     return await resultAsync(this.db!.findIndex("permissions", "url", event.url), "resultfiy");
   }
 
-  async addActivity({
-    action,
-    url,
-    activityTitle,
-    elementName,
-    attributes,
-    selector,
-  }: AddActivity): Promise<ResultAsync<Omit<AddActivity, "eventName"> & { id: number }>> {
+  async addActivity({ action, url, activityTitle, elementName, attributes, selector }: AddActivity): Promise<ResultAsync<Activity>> {
     if (!this.db) {
       try {
         await this.initialize();
@@ -146,7 +145,7 @@ export default class EventHandler {
     return await resultAsync(this.db!.remove("activites", event.id), "resultfiy");
   }
 
-  async getActivities(_: GetActivites): Promise<ResultAsync<Omit<AddActivity, "eventName">[]>> {
+  async getActivities(_: GetActivites): Promise<ResultAsync<Activities>> {
     if (!this.db) {
       try {
         await this.initialize();
@@ -179,7 +178,7 @@ export default class EventHandler {
       }
     }
 
-    const result = await resultAsync(this.db!.find<Omit<AddActivity, "eventName"> & { id: number }>("activites", event.id), "resultfiy");
+    const result = await resultAsync(this.db!.find<Activity>("activites", event.id), "resultfiy");
     if (result.error && !result.data) {
       return { error: result.error };
     }
@@ -192,5 +191,61 @@ export default class EventHandler {
     }
 
     return { data: undefined };
+  }
+
+  async startMission(_: StartMission): Promise<ResultAsync<boolean>> {
+    if (!this.db) {
+      try {
+        await this.initialize();
+      } catch (e) {
+        return { error: e };
+      }
+    }
+
+    const result = await resultAsync(chrome.tabs.query({ active: true, currentWindow: true }), "resultfiy");
+    if (result.error) {
+      return { error: result.error };
+    }
+
+    const [tab] = result.data!;
+    if (!tab?.id || !tab?.url) {
+      return { error: "No active tab found" };
+    }
+
+    const url = new URL(tab.url);
+    const permission = await resultAsync<URLPermission>(this.db!.findIndex("permissions", "url", url.hostname), "resultfiy");
+    if (permission.error) {
+      return { error: permission.error };
+    }
+
+    if (!permission.data) {
+      return { error: "Permission denied" };
+    }
+
+    const missionsResult = await resultAsync<Missions>(this.db!.getAll("missions"), "resultfiy");
+    if (missionsResult.error) {
+      return { error: missionsResult.error };
+    }
+
+    const activeMission = missionsResult.data!.find((mission) => mission.active);
+    if (!activeMission) {
+      return { error: "No active mission found" };
+    }
+
+    // @TODO: add the mission creation handler. make the newset mission active
+
+    const injectResult = await resultAsync(
+      chrome.scripting.executeScript({
+        files: ["bundle/activityTracker.js"],
+        target: { tabId: tab.id },
+      }),
+      "resultfiy",
+    );
+
+    if (injectResult.error) {
+      return { error: injectResult.error };
+    }
+
+    return { data: true };
   }
 }

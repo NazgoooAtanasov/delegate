@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
 import prismjs from 'vite-plugin-prismjs'
-import path from 'path';
 
 export default defineConfig({
   plugins: [prismjs({ languages: ['markup'], theme: 'okaidia', css: true }), preact()],

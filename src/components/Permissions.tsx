@@ -2,6 +2,7 @@ import { Signal, useSignal } from "@preact/signals";
 import React from "preact/compat";
 import { ResultAsync, resultAsync } from "../utils";
 import { AddIcon, ConfirmIcon, RemoveIcon } from "./Icons";
+import InputField from "./InputField";
 
 export type Permission = { id: number; url: string };
 export type Permissions = Permission[];
@@ -78,8 +79,8 @@ export default function Permissions({ permissions }: { permissions: Signal<Permi
       ))}
       {showNewField.value && (
         <div className="m-[5px] grid grid-cols-[minmax(90%,_auto)_auto] grid-rows-[40px] text-base">
-          <input
-            className="rounded-md bg-gray-400 p-[10px] placeholder-gray-100"
+          <InputField
+            name="urlpermission"
             onChange={(e) => (newPermissionUrl.value = (e.target as HTMLInputElement).value)}
             placeholder="URL"
           />

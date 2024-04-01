@@ -16,7 +16,7 @@ export default class Database implements Storage {
 
   async conncect(): Promise<void> {
     return new Promise((res, rej) => {
-      const dbOpenRequest = indexedDB.open("delegate", 2);
+      const dbOpenRequest = indexedDB.open("delegate", 3);
 
       dbOpenRequest.addEventListener("success", (_) => {
         this.db = dbOpenRequest.result;
@@ -41,6 +41,14 @@ export default class Database implements Storage {
             keyPath: "id",
             autoIncrement: true,
           });
+        }
+
+        if (!this.db.objectStoreNames.contains("missions")) {
+          const missions = this.db.createObjectStore("missions", {
+            keyPath: "id",
+            autoIncrement: true,
+          });
+          missions.createIndex("name", "name", { unique: true });
         }
 
         res();

@@ -7,6 +7,7 @@ import {
   RemoveActivities,
   RemoveActivity,
   RemoveURLPermission,
+  StartMission,
   UpdateActivity,
 } from "./serviceWorkerUtils/eventHandler";
 import { resultAsync } from "./utils";
@@ -67,57 +68,6 @@ chrome.tabs.onActivated.addListener(async (tab) => {
   }
 });
 
-chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
-  if (changeInfo.status !== "complete") return;
-
-  if (!eventHandler) {
-    try {
-      eventHandler = new EventHandler();
-      await eventHandler.initialize();
-    } catch (err) {
-      console.error("There was an error initializing the event handler", err);
-    }
-  }
-
-  const url = tab.url!;
-  let permission: { id: number; url: string } | undefined = undefined;
-  let permissions: { id: number; url: string }[] = [];
-
-  try {
-    const urlOjb = new URL(url);
-    const result = await eventHandler?.getURLPermissions({ eventName: "getURLPermissions" });
-
-    if (result?.error) {
-      console.error("There was an error getting the permission", result.error);
-      return;
-    }
-
-    permission = result?.data?.find((permission) => permission.url === urlOjb.hostname);
-    permissions = result?.data || [];
-  } catch (err) {
-    console.error("There was an error getting the permission", err);
-  }
-
-  if (permission) {
-    try {
-      const activeScripts = await chrome.scripting.getRegisteredContentScripts({ ids: ["activityTracker"] });
-      if (activeScripts.length <= 0) {
-        await chrome.scripting.registerContentScripts([
-          {
-            id: "activityTracker",
-            js: ["bundle/activityTracker.js"],
-            persistAcrossSessions: true,
-            matches: permissions.map((permission) => `https://${permission.url}/*`), // ["https://*/*"],
-            runAt: "document_end",
-          },
-        ]);
-      }
-    } catch (err) {
-      console.error("There was an error registering content scripts", err);
-    }
-  }
-});
-
 chrome.tabs.onUpdated.addListener(async (tabId) => {
   await chrome.sidePanel.setOptions({
     tabId,
@@ -136,7 +86,8 @@ chrome.runtime.onMessage.addListener(
       | RemoveActivity
       | GetActivites
       | RemoveActivities
-      | UpdateActivity,
+      | UpdateActivity
+      | StartMission,
     _,
     sendResponse: (_: unknown) => void,
   ) => {
@@ -148,7 +99,8 @@ chrome.runtime.onMessage.addListener(
       message.eventName !== "getActivities" &&
       message.eventName !== "removeActivities" &&
       message.eventName !== "removeActivity" &&
-      message.eventName !== "updateActivity"
+      message.eventName !== "updateActivity" &&
+      message.eventName !== "startMission"
     ) {
       return false;
     }
@@ -216,6 +168,14 @@ chrome.runtime.onMessage.addListener(
     if (message.eventName === "updateActivity") {
       eventHandler
         ?.updateActivity(message)
+        .then((result) => sendResponse(result))
+        .catch((err) => sendResponse(err));
+      return true;
+    }
+
+    if (message.eventName === "startMission") {
+      eventHandler
+        ?.startMission(message)
         .then((result) => sendResponse(result))
         .catch((err) => sendResponse(err));
       return true;

@@ -1,9 +1,10 @@
 import React, { useEffect, useRef } from "preact/compat";
 import { ArrowDownIcon, ArrowUpIcon, ConfirmIcon, RemoveIcon } from "./Icons";
-import { type Activity } from "./Activities";
+import { type Activity } from "../entities";
 import Prismjs from "prismjs";
 import { useSignal } from "@preact/signals";
 import { ResultAsync, resultAsync } from "../utils";
+import InputField from "./InputField";
 
 Prismjs.manual = true;
 function CodeSegment({ element }: { element: { elementName: string; attributes: string[][] } }) {
@@ -99,13 +100,7 @@ export default function Activity({ activity, deleteActivity }: { activity: Activ
           <h3 className="flex min-w-0 max-w-full">
             <span className="text-green-300">{activity.action}</span>:&nbsp;
             {edit.value ? (
-              <input
-                ref={inputField}
-                value={activity.activityTitle}
-                className="ml-[5px] mr-[5px] bg-inherit outline-none placeholder:text-gray-800"
-                type="text"
-                placeholder="Edit title..."
-              />
+              <InputField name="edittitle" ref={inputField} value={activity.activityTitle} placeholder="Edit title..." />
             ) : (
               <button
                 onClick={toggleEditTitle}
