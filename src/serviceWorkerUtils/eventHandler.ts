@@ -51,6 +51,10 @@ export type RemoveActivity = {
   id: number;
 };
 
+export type GetCurrentMission = {
+  eventName: "getCurrentMission";
+};
+
 export type AddMission = {
   eventName: "addMission";
   missionName: string;
@@ -212,10 +216,10 @@ export default class EventHandler {
     }
 
     const result = await resultAsync(
-      this.db!.add("missions", {
+      this.db!.add<Omit<Mission, "id">>("missions", {
         name: event.missionName,
         active: true,
-        activites: [],
+        activities: [],
       }),
       "resultfiy",
     );
@@ -324,9 +328,16 @@ export default class EventHandler {
     // @WARN: Ignoring the error for now here
     if (missions.data) {
       const mission = missions.data.find((mission) => mission.active);
-      if (mission) {
+      if (mission && mission.active) {
         mission.active = false;
+
+        const currentActivities = await resultAsync(this.db!.getAll<Activity>("activites"), "resultfiy");
+        if (currentActivities.data) {
+          mission.activities = currentActivities.data;
+        }
+
         await resultAsync(this.db!.update("missions", mission), "resultfiy");
+        await resultAsync(this.db!.removeAll("activites"), "resultfiy");
       }
     }
 
@@ -339,5 +350,22 @@ export default class EventHandler {
     );
 
     return {};
+  }
+
+  async getCurrentMission(_: GetCurrentMission): Promise<ResultAsync<Mission | null>> {
+    if (!this.db) {
+      try {
+        await this.initialize();
+      } catch (e) {
+        return { error: e };
+      }
+    }
+
+    const missions = await resultAsync(this.db!.getAll<Mission>("missions"), "resultfiy");
+    if (missions.error) {
+      return { error: missions.error };
+    }
+
+    return { data: missions.data!.find((mission) => mission.active) };
   }
 }

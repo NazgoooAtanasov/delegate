@@ -27,7 +27,8 @@ function CodeSegment({ element }: { element: { elementName: string; attributes: 
 export default function Activity({ activity, deleteActivity }: { activity: Activity; deleteActivity: () => void }) {
   const expand = useSignal(false);
   const edit = useSignal(false);
-  const inputField = useRef(null);
+  const editedTitle = useSignal("");
+  const editTitleRef = useRef<HTMLInputElement>(null);
 
   const element: { elementName: string; attributes: string[][] } = {
     elementName: activity.elementName,
@@ -66,6 +67,9 @@ export default function Activity({ activity, deleteActivity }: { activity: Activ
 
   function toggleEditTitle() {
     edit.value = !edit.value;
+    if (edit.value) {
+      editTitleRef.current?.focus();
+    }
   }
 
   async function saveTitle() {
@@ -73,7 +77,7 @@ export default function Activity({ activity, deleteActivity }: { activity: Activ
       chrome.runtime.sendMessage({
         eventName: "updateActivity",
         id: activity.id,
-        title: (inputField!.current! as HTMLInputElement).value,
+        title: editedTitle.value,
       }),
       "bare",
     )) as ResultAsync<void>;
@@ -83,15 +87,9 @@ export default function Activity({ activity, deleteActivity }: { activity: Activ
       return;
     }
 
-    activity.activityTitle = (inputField!.current! as HTMLInputElement).value;
+    activity.activityTitle = editedTitle.value;
     toggleEditTitle();
   }
-
-  useEffect(() => {
-    if (edit.value) {
-      (inputField!.current! as HTMLInputElement).focus();
-    }
-  }, [edit.value]);
 
   return (
     <>
@@ -100,7 +98,13 @@ export default function Activity({ activity, deleteActivity }: { activity: Activ
           <h3 className="flex min-w-0 max-w-full">
             <span className="text-green-300">{activity.action}</span>:&nbsp;
             {edit.value ? (
-              <InputField name="edittitle" ref={inputField} value={activity.activityTitle} placeholder="Edit title..." />
+              <InputField
+                ref={editTitleRef}
+                name="edittitle"
+                onChange={({ target }) => (editedTitle.value = (target as HTMLInputElement).value)}
+                value={activity.activityTitle}
+                placeholder="Edit title..."
+              />
             ) : (
               <button
                 onClick={toggleEditTitle}

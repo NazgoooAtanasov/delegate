@@ -37,6 +37,7 @@ export default class Database implements Storage {
         }
 
         if (!this.db.objectStoreNames.contains("activites")) {
+          // @TODO: @FIXME this should get renamed. it is a typo
           this.db.createObjectStore("activites", {
             keyPath: "id",
             autoIncrement: true,

@@ -6,6 +6,7 @@ type InputFieldProps = {
   value?: string;
   type?: string;
   className?: string;
+  autofocus?: boolean;
   ref?: React.Ref<HTMLInputElement>;
   onChange?: (e: Event) => void;
   onFocus?: (e: Event) => void;
@@ -22,9 +23,11 @@ export default function InputField({
   onBlur,
   className = "",
   type = "text",
+  autofocus = true,
 }: InputFieldProps) {
   return (
     <input
+      autofocus={autofocus}
       type={type}
       name={name}
       className={className + " ml-[5px] mr-[5px] bg-inherit outline-none placeholder:text-gray-800"}

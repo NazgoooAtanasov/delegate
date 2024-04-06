@@ -5,6 +5,7 @@ import {
   AddURLPermission,
   EndMission,
   GetActivites,
+  GetCurrentMission,
   GetURLPermissions,
   RemoveActivities,
   RemoveActivity,
@@ -91,7 +92,8 @@ chrome.runtime.onMessage.addListener(
       | UpdateActivity
       | AddMission
       | StartMission
-      | EndMission,
+      | EndMission
+      | GetCurrentMission,
     _,
     sendResponse: (_: unknown) => void,
   ) => {
@@ -106,6 +108,7 @@ chrome.runtime.onMessage.addListener(
       message.eventName !== "updateActivity" &&
       message.eventName !== "addMission" &&
       message.eventName !== "startMission" &&
+      message.eventName !== "getCurrentMission" &&
       message.eventName !== "endMission"
     ) {
       return false;
@@ -201,6 +204,14 @@ chrome.runtime.onMessage.addListener(
         .then((result) => sendResponse(result))
         .catch((err) => sendResponse(err));
       return false;
+    }
+
+    if (message.eventName === "getCurrentMission") {
+      eventHandler
+        ?.getCurrentMission(message)
+        .then((result) => sendResponse(result))
+        .catch((err) => sendResponse(err));
+      return true;
     }
   },
 );

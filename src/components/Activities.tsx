@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "preact/compat";
+import React, { useEffect } from "preact/compat";
 import { ResultAsync, resultAsync } from "../utils";
 import Button from "./Button";
 import { Mission, type Activities } from "../entities";
@@ -19,10 +19,9 @@ type ActivityAdded = {
   id: number;
 };
 
-export default function Activities({ activities }: { activities: Signal<Activities> }) {
-  const error = useSignal<string | null>(null);
-  const currentMission = useSignal<Mission | null>(null);
+export default function Activities({ activities, mission }: { activities: Signal<Activities>; mission: Signal<Mission | null> }) {
   const missionName = useSignal("");
+  const error = useSignal<string | null>(null);
 
   function clearActions() {
     chrome.runtime.sendMessage({ eventName: "removeActivities" });
@@ -58,19 +57,26 @@ export default function Activities({ activities }: { activities: Signal<Activiti
       return;
     }
 
-    currentMission.value = result.data!;
+    mission.value = result.data!;
   }
 
   async function startMission() {
     const result = (await resultAsync(chrome.runtime.sendMessage({ eventName: "startMission" }), "bare")) as ResultAsync<boolean>;
     if (result.error) {
       error.value = result.error as string;
+      return;
     }
+    chrome.tabs.reload();
   }
 
   function endMission() {
     // @NOTE: maybe not raw dogging the call here? maybe wrapping in result object? maybe not?
     chrome.runtime.sendMessage({ eventName: "endMission" });
+    chrome.tabs.reload();
+
+    activities.value = [];
+    mission.value = null;
+    missionName.value = "";
   }
 
   chrome.runtime.onMessage.addListener(updateActivities);
@@ -85,7 +91,7 @@ export default function Activities({ activities }: { activities: Signal<Activiti
         <Button className="ml-3px mr-[3px] flex-grow" text="Clear all" onClick={clearActions} />
         <Button className="ml-3px mr-[3px] flex-grow" text="Get report" />
         <Button className="ml-3px mr-[3px] flex-grow" text="Start" onClick={startMission} />
-        <Button className="ml-3px mr-[3px] flex-grow" text="End" onClick={endMission} disabled={!currentMission.value} />
+        <Button className="ml-3px mr-[3px] flex-grow" text="End" onClick={endMission} disabled={!mission.value} />
       </div>
       {error.value && <div className="mt-[20px] text-red-500">{error.value}</div>}
       <div className="mt-[20px] grid grid-cols-[auto_5%] grid-rows-[30px]">
@@ -93,7 +99,7 @@ export default function Activities({ activities }: { activities: Signal<Activiti
           <label className="flex-grow-0 text-lg" for="missionfield">
             Mission:
           </label>
-          {!currentMission.value ? (
+          {!mission.value ? (
             <InputField
               onChange={(event) => (missionName.value = (event.target as HTMLInputElement).value)}
               className="w-full flex-grow text-lg"
@@ -101,10 +107,10 @@ export default function Activities({ activities }: { activities: Signal<Activiti
               placeholder="Fancy name..."
             />
           ) : (
-            <h3 className="w-full flex-grow text-lg">{currentMission.value.name}</h3>
+            <h3 className="w-full flex-grow text-lg">{mission.value.name}</h3>
           )}
         </div>
-        {!currentMission.value && (
+        {!mission.value && (
           <button onClick={createAndActivateMission} className="ml-[3px] max-w-[30px]">
             <ConfirmIcon className="h-auto max-h-full max-w-full" />
           </button>
