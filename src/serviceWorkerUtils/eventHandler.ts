@@ -1,4 +1,4 @@
-import { URLPermission, URLPermissions, Activities, Activity, Missions } from "../entities";
+import { URLPermission, URLPermissions, Activities, Activity, Missions, Mission } from "../entities";
 import { ResultAsync, resultAsync } from "../utils";
 import Database, { Storage } from "./database";
 
@@ -48,6 +48,11 @@ export type AddActivity = {
 export type RemoveActivity = {
   eventName: "removeActivity";
   id: number;
+};
+
+export type AddMission = {
+  eventName: "addMission";
+  missionName: string;
 };
 
 export type StartMission = {
@@ -192,6 +197,50 @@ export default class EventHandler {
     return { data: undefined };
   }
 
+  async addMission(event: AddMission): Promise<ResultAsync<Mission>> {
+    if (!this.db) {
+      try {
+        await this.initialize();
+      } catch (e) {
+        return { error: e };
+      }
+    }
+
+    const result = await resultAsync(
+      this.db!.add("missions", {
+        name: event.missionName,
+        active: true,
+        activites: [],
+      }),
+      "resultfiy",
+    );
+    if (result.error || !result.data) {
+      return { error: result.error };
+    }
+
+    const missions = await resultAsync(this.db!.getAll<Mission>("missions"), "resultfiy");
+    if (missions.error || !missions.data) {
+      return { error: missions.error };
+    }
+
+    missions.data.forEach(async (mission) => {
+      if (mission.id !== result.data) {
+        mission.active = false;
+        // ignore the result for now.
+        await resultAsync(this.db!.update("missions", mission), "resultfiy");
+      }
+    });
+
+    return {
+      data: {
+        id: result.data,
+        name: event.missionName,
+        active: true,
+        activities: [],
+      },
+    };
+  }
+
   async startMission(_: StartMission): Promise<ResultAsync<boolean>> {
     if (!this.db) {
       try {
@@ -230,8 +279,6 @@ export default class EventHandler {
     if (!activeMission) {
       return { error: "No active mission found" };
     }
-
-    // @TODO: add the mission creation handler. make the newset mission active
 
     const injectResult = await resultAsync(
       chrome.scripting.executeScript({

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "preact/compat";
 import { ResultAsync, resultAsync } from "../utils";
 import Button from "./Button";
-import { type Activities } from "../entities";
+import { Mission, type Activities } from "../entities";
 import Activity from "./Activity";
 import { Signal, useSignal } from "@preact/signals";
 import InputField from "./InputField";
@@ -20,9 +20,9 @@ type ActivityAdded = {
 };
 
 export default function Activities({ activities }: { activities: Signal<Activities> }) {
-  const missionField = useRef<HTMLInputElement>(null);
-  const missionFieldFocus = useSignal(false);
   const error = useSignal<string | null>(null);
+  const currentMission = useSignal<Mission | null>(null);
+  const missionName = useSignal("");
 
   function clearActions() {
     chrome.runtime.sendMessage({ eventName: "removeActivities" });
@@ -48,7 +48,18 @@ export default function Activities({ activities }: { activities: Signal<Activiti
     return false;
   }
 
-  // @TODO: add the mission creation handler. make the newset mission active
+  async function createAndActivateMission() {
+    const result = (await resultAsync(
+      chrome.runtime.sendMessage({ eventName: "addMission", missionName: missionName.value }),
+      "bare",
+    )) as ResultAsync<Mission>;
+    if (result.error) {
+      error.value = result.error as string;
+      return;
+    }
+
+    currentMission.value = result.data!;
+  }
 
   async function startMission() {
     const result = (await resultAsync(chrome.runtime.sendMessage({ eventName: "startMission" }), "bare")) as ResultAsync<boolean>;
@@ -77,17 +88,19 @@ export default function Activities({ activities }: { activities: Signal<Activiti
           <label className="flex-grow-0 text-lg" for="missionfield">
             Mission:
           </label>
-          <InputField
-            onFocus={() => (missionFieldFocus.value = true)}
-            onBlur={() => (missionFieldFocus.value = false)}
-            ref={missionField}
-            className="w-full flex-grow text-lg"
-            name="missionfield"
-            placeholder="Fancy name..."
-          />
+          {!currentMission.value ? (
+            <InputField
+              onChange={(event) => (missionName.value = (event.target as HTMLInputElement).value)}
+              className="w-full flex-grow text-lg"
+              name="missionfield"
+              placeholder="Fancy name..."
+            />
+          ) : (
+            <h3 className="w-full flex-grow text-lg">{currentMission.value.name}</h3>
+          )}
         </div>
-        {missionFieldFocus.value && (
-          <button className="ml-[3px] max-w-[30px]">
+        {!currentMission.value && (
+          <button onClick={createAndActivateMission} className="ml-[3px] max-w-[30px]">
             <ConfirmIcon className="h-auto max-h-full max-w-full" />
           </button>
         )}

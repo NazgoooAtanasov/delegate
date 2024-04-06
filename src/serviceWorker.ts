@@ -1,6 +1,7 @@
 import { EventHandler } from "./serviceWorkerUtils";
 import {
   AddActivity,
+  AddMission,
   AddURLPermission,
   GetActivites,
   GetURLPermissions,
@@ -87,6 +88,7 @@ chrome.runtime.onMessage.addListener(
       | GetActivites
       | RemoveActivities
       | UpdateActivity
+      | AddMission
       | StartMission,
     _,
     sendResponse: (_: unknown) => void,
@@ -100,6 +102,7 @@ chrome.runtime.onMessage.addListener(
       message.eventName !== "removeActivities" &&
       message.eventName !== "removeActivity" &&
       message.eventName !== "updateActivity" &&
+      message.eventName !== "addMission" &&
       message.eventName !== "startMission"
     ) {
       return false;
@@ -176,6 +179,14 @@ chrome.runtime.onMessage.addListener(
     if (message.eventName === "startMission") {
       eventHandler
         ?.startMission(message)
+        .then((result) => sendResponse(result))
+        .catch((err) => sendResponse(err));
+      return true;
+    }
+
+    if (message.eventName === "addMission") {
+      eventHandler
+        ?.addMission(message)
         .then((result) => sendResponse(result))
         .catch((err) => sendResponse(err));
       return true;
