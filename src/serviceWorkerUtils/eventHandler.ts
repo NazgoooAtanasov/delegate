@@ -219,6 +219,7 @@ export default class EventHandler {
       this.db!.add<Omit<Mission, "id">>("missions", {
         name: event.missionName,
         active: true,
+        running: false,
         activities: [],
       }),
       "resultfiy",
@@ -245,6 +246,7 @@ export default class EventHandler {
         id: result.data,
         name: event.missionName,
         active: true,
+        running: false,
         activities: [],
       },
     };
@@ -312,6 +314,12 @@ export default class EventHandler {
       return { error: injectResult.error };
     }
 
+    activeMission.running = true;
+    const runResult = await resultAsync(this.db!.update("missions", activeMission), "resultfiy");
+    if (runResult.error) {
+      return { error: runResult.error };
+    }
+
     return { data: true };
   }
 
@@ -330,6 +338,7 @@ export default class EventHandler {
       const mission = missions.data.find((mission) => mission.active);
       if (mission && mission.active) {
         mission.active = false;
+        mission.running = false;
 
         const currentActivities = await resultAsync(this.db!.getAll<Activity>("activites"), "resultfiy");
         if (currentActivities.data) {

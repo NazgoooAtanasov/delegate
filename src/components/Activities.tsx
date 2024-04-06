@@ -66,6 +66,9 @@ export default function Activities({ activities, mission }: { activities: Signal
       error.value = result.error as string;
       return;
     }
+    if (mission.value) {
+      mission.value = { ...mission.value, running: true };
+    }
     chrome.tabs.reload();
   }
 
@@ -117,9 +120,17 @@ export default function Activities({ activities, mission }: { activities: Signal
         )}
       </div>
       <div className="mb-[10px] mt-[10px]">
-        {activities.value.map((activity, index) => {
-          return <Activity key={index} activity={activity} deleteActivity={() => deleteActivity(activity.id)} />;
-        })}
+        {mission.value && mission.value.running && (
+          <>
+            {activities.value.length > 0 ? (
+              activities.value.map((activity, index) => {
+                return <Activity key={index} activity={activity} deleteActivity={() => deleteActivity(activity.id)} />;
+              })
+            ) : (
+              <div> Waiting for activities... </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
