@@ -1,3 +1,4 @@
+import { Permission } from "../components/Permissions";
 import { URLPermission, URLPermissions, Activities, Activity, Missions, Mission } from "../entities";
 import { ResultAsync, resultAsync } from "../utils";
 import Database, { Storage } from "./database";
@@ -57,6 +58,10 @@ export type AddMission = {
 
 export type StartMission = {
   eventName: "startMission";
+};
+
+export type EndMission = {
+  eventName: "endMission";
 };
 
 export default class EventHandler {
@@ -280,18 +285,59 @@ export default class EventHandler {
       return { error: "No active mission found" };
     }
 
+    const permissions = await resultAsync(this.db!.getAll<Permission>("permissions"), "resultfiy");
+    if (permissions.error || !permissions.data) {
+      return { error: permissions.error };
+    }
+
+    // @NOTE: IDK why but injection feels like it should be behind a permission check
     const injectResult = await resultAsync(
-      chrome.scripting.executeScript({
-        files: ["bundle/activityTracker.js"],
-        target: { tabId: tab.id },
-      }),
+      chrome.scripting.registerContentScripts([
+        {
+          id: "activityTracker",
+          matches: permissions.data.map((permission) => {
+            return `https://${permission.url}/*`;
+          }),
+          js: ["bundle/activityTracker.js"],
+          runAt: "document_end",
+        },
+      ]),
       "resultfiy",
     );
-
     if (injectResult.error) {
       return { error: injectResult.error };
     }
 
     return { data: true };
+  }
+
+  async endMission(_: EndMission): Promise<ResultAsync<void>> {
+    if (!this.db) {
+      try {
+        await this.initialize();
+      } catch (e) {
+        return { error: e };
+      }
+    }
+
+    const missions = await resultAsync(this.db!.getAll<Mission>("missions"), "resultfiy");
+    // @WARN: Ignoring the error for now here
+    if (missions.data) {
+      const mission = missions.data.find((mission) => mission.active);
+      if (mission) {
+        mission.active = false;
+        await resultAsync(this.db!.update("missions", mission), "resultfiy");
+      }
+    }
+
+    // @WARN: Ignoring the error for now here
+    await resultAsync(
+      chrome.scripting.unregisterContentScripts({
+        ids: ["activityTracker"],
+      }),
+      "resultfiy",
+    );
+
+    return {};
   }
 }

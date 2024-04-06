@@ -68,6 +68,11 @@ export default function Activities({ activities }: { activities: Signal<Activiti
     }
   }
 
+  function endMission() {
+    // @NOTE: maybe not raw dogging the call here? maybe wrapping in result object? maybe not?
+    chrome.runtime.sendMessage({ eventName: "endMission" });
+  }
+
   chrome.runtime.onMessage.addListener(updateActivities);
   useEffect(() => {
     return () => chrome.runtime.onMessage.removeListener(updateActivities);
@@ -80,7 +85,7 @@ export default function Activities({ activities }: { activities: Signal<Activiti
         <Button className="ml-3px mr-[3px] flex-grow" text="Clear all" onClick={clearActions} />
         <Button className="ml-3px mr-[3px] flex-grow" text="Get report" />
         <Button className="ml-3px mr-[3px] flex-grow" text="Start" onClick={startMission} />
-        <Button className="ml-3px mr-[3px] flex-grow" text="End" disabled={true} />
+        <Button className="ml-3px mr-[3px] flex-grow" text="End" onClick={endMission} disabled={!currentMission.value} />
       </div>
       {error.value && <div className="mt-[20px] text-red-500">{error.value}</div>}
       <div className="mt-[20px] grid grid-cols-[auto_5%] grid-rows-[30px]">
