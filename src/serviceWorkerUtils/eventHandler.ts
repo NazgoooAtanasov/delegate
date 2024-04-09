@@ -58,6 +58,7 @@ export type GetCurrentMission = {
 export type AddMission = {
   eventName: "addMission";
   missionName: string;
+  missionTime: string;
 };
 
 export type StartMission = {
@@ -215,9 +216,19 @@ export default class EventHandler {
       }
     }
 
+    const existsCheck = await resultAsync(this.db!.findIndex<Mission, string>("missions", "name", event.missionName), "resultfiy");
+    if (existsCheck.error) {
+      return { error: existsCheck.error };
+    }
+
+    if (existsCheck.data) {
+      return { error: "Mission with that name already exists" };
+    }
+
     const result = await resultAsync(
       this.db!.add<Omit<Mission, "id">>("missions", {
         name: event.missionName,
+        missionTime: event.missionTime,
         active: true,
         running: false,
         activities: [],
@@ -245,6 +256,7 @@ export default class EventHandler {
       data: {
         id: result.data,
         name: event.missionName,
+        missionTime: event.missionTime,
         active: true,
         running: false,
         activities: [],
@@ -315,6 +327,7 @@ export default class EventHandler {
     }
 
     activeMission.running = true;
+    activeMission.startTime = Date.now();
     const runResult = await resultAsync(this.db!.update("missions", activeMission), "resultfiy");
     if (runResult.error) {
       return { error: runResult.error };
@@ -339,6 +352,7 @@ export default class EventHandler {
       if (mission && mission.active) {
         mission.active = false;
         mission.running = false;
+        mission.endTime = Date.now();
 
         const currentActivities = await resultAsync(this.db!.getAll<Activity>("activites"), "resultfiy");
         if (currentActivities.data) {

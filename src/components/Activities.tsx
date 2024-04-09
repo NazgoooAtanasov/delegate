@@ -1,5 +1,5 @@
 import React, { useEffect } from "preact/compat";
-import { ResultAsync, resultAsync } from "../utils";
+import { ResultAsync, resultAsync, timerRegex } from "../utils";
 import Button from "./Button";
 import { Mission, type Activities } from "../entities";
 import Activity from "./Activity";
@@ -51,8 +51,25 @@ export default function Activities({ activities, mission }: { activities: Signal
   }
 
   async function createAndActivateMission() {
+    error.value = null;
+
+    if (!missionTime.value) {
+      error.value = "Please select a mission time";
+      return;
+    }
+
+    if (!missionTime.value.match(timerRegex)) {
+      error.value = "Please enter a valid mission time. It should be in the format of XXmin";
+      return;
+    }
+
+    if (!missionName.value) {
+      error.value = "Please enter a mission name";
+      return;
+    }
+
     const result = (await resultAsync(
-      chrome.runtime.sendMessage({ eventName: "addMission", missionName: missionName.value }),
+      chrome.runtime.sendMessage({ eventName: "addMission", missionName: missionName.value, missionTime: missionTime.value }),
       "bare",
     )) as ResultAsync<Mission>;
     if (result.error) {
@@ -150,7 +167,7 @@ export default function Activities({ activities, mission }: { activities: Signal
           <h3 className="w-full text-lg">{mission.value.name}</h3>
         )}
 
-        {mission.value?.running && <Timer />}
+        {mission.value?.running && <Timer toCount={missionTime.value} />}
 
         {!mission.value && (
           <button onClick={createAndActivateMission} className="ml-[3px] max-w-[30px]">

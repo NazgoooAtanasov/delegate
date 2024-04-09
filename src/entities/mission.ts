@@ -5,6 +5,9 @@ export type Mission = {
   name: string;
   active: boolean;
   running: boolean;
+  missionTime: string;
+  startTime?: number;
+  endTime?: number;
   activities: Activities;
 };
 
