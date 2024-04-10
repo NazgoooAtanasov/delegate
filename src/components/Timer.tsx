@@ -1,4 +1,4 @@
-import { useSignal } from "@preact/signals";
+import { useSignal, useSignalEffect } from "@preact/signals";
 import React, { useEffect, useMemo } from "preact/compat";
 import { calcTimerDiff, timerRegex } from "../utils";
 
@@ -11,9 +11,15 @@ const useTimer = (callback: () => void, pollTime: number = 1000) => {
 
 type TimerProps = {
   toCount: string;
+  timerAboutToElapse?: () => void;
+  timerElapsed?: () => void;
+  className?: string;
 };
 
-export default function Timer({ toCount }: TimerProps) {
+export default function Timer({ toCount, timerAboutToElapse, timerElapsed, className = "" }: TimerProps) {
+  let timerAboutToElapseSent = false;
+  let timerElapsedSent = false;
+
   const target = useMemo(() => {
     const matches = toCount.match(timerRegex);
     const time = matches?.groups?.time;
@@ -28,10 +34,22 @@ export default function Timer({ toCount }: TimerProps) {
     return target;
   }, []);
 
+  const timerState = useSignal<"good" | "warning" | "bad">("good");
+  useSignalEffect(() => {
+    if (timerState.value === "warning" && !timerAboutToElapseSent && timerAboutToElapse) {
+      timerAboutToElapse();
+      timerAboutToElapseSent = true;
+    }
+
+    if (timerState.value === "bad" && !timerElapsedSent && timerElapsed) {
+      timerElapsed();
+      timerElapsedSent = true;
+    }
+  });
+
   const hours = useSignal(0);
   const minutes = useSignal(0);
   const seconds = useSignal(0);
-  const timerState = useSignal<"good" | "warning" | "bad">("good");
   const timerCallback = useSignal<(() => void) | undefined>(undefined);
   const elapsedTimer = useSignal(new Date());
 
@@ -74,11 +92,15 @@ export default function Timer({ toCount }: TimerProps) {
   useTimer(timerCallback.value, 1000);
 
   return (
-    <div
-      className={`text-lg ${timerState.value === "good" && "text-green-700"} ${timerState.value === "warning" && "text-yellow-700"} ${timerState.value === "bad" && "text-red-700"}`}
-    >
-      {hours.value <= 9 ? `0${hours.value}` : hours.value}:{minutes.value <= 9 ? `0${minutes.value}` : minutes.value}:
-      {seconds.value <= 9 ? `0${seconds.value}` : seconds.value}
+    <div className={`text-sm ${className}`}>
+      Elapsed time:
+      <span
+        className={`ml-[3px] ${timerState.value === "good" && "text-green-700"} ${timerState.value === "warning" && "text-yellow-700"} ${timerState.value === "bad" && "text-red-700"}`}
+      >
+        {timerState.value === "bad" && "-"}
+        {hours.value <= 9 ? `0${hours.value}` : hours.value}:{minutes.value <= 9 ? `0${minutes.value}` : minutes.value}:
+        {seconds.value <= 9 ? `0${seconds.value}` : seconds.value}
+      </span>
     </div>
   );
 }

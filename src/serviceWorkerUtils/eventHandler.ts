@@ -61,6 +61,10 @@ export type AddMission = {
   missionTime: string;
 };
 
+export type GetMissions = {
+  eventName: "getMissions";
+};
+
 export type StartMission = {
   eventName: "startMission";
 };
@@ -373,6 +377,19 @@ export default class EventHandler {
     );
 
     return {};
+  }
+
+  // @FIXME: this is a durty solution for fetching all missions. pls fix
+  async getMissions(_: GetMissions): Promise<ResultAsync<Missions>> {
+    if (!this.db) {
+      try {
+        await this.initialize();
+      } catch (e) {
+        return { error: e };
+      }
+    }
+
+    return await resultAsync(this.db!.getAll("missions"), "resultfiy");
   }
 
   async getCurrentMission(_: GetCurrentMission): Promise<ResultAsync<Mission | null>> {
