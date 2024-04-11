@@ -21,10 +21,42 @@ type ActivityAdded = {
 };
 
 export default function Activities({ activities, mission }: { activities: Signal<Activities>; mission: Signal<Mission | null> }) {
+  const missionTimes = [
+    {
+      value: "15min",
+      selected: true,
+    },
+    {
+      value: "20min",
+      selected: false,
+    },
+    {
+      value: "25min",
+      selected: false,
+    },
+    {
+      value: "Custom",
+      selected: false,
+    },
+  ];
+
   const missionName = useSignal("");
-  const missionTime = useSignal("15min");
-  const customTimerVisibility = useSignal(false);
   const error = useSignal<string | null>(null);
+
+  const isCustomTimeSet = (!!mission.value && !missionTimes.find((time) => time.value === mission.value?.missionTime ?? "")) ?? false;
+  if (isCustomTimeSet) {
+    missionTimes.forEach((time) => {
+      time.selected = time.value === "Custom";
+    });
+  }
+  const missionTime = useSignal(mission.value?.missionTime ?? missionTimes[0].value);
+  const customTimerVisibility = useSignal(isCustomTimeSet);
+  useEffect(() => {
+    if (isCustomTimeSet) {
+      customTimerVisibility.value = isCustomTimeSet;
+      missionTime.value = mission.value?.missionTime ?? "";
+    }
+  }, [isCustomTimeSet]);
 
   function clearActions() {
     chrome.runtime.sendMessage({ eventName: "removeActivities" });
@@ -100,14 +132,18 @@ export default function Activities({ activities, mission }: { activities: Signal
     activities.value = [];
     mission.value = null;
     missionName.value = "";
+    error.value = null;
+    missionTime.value = "";
+    customTimerVisibility.value = false;
   }
 
   function onMissionTimeChange(event: Event) {
     const selectedItem = (event.target as HTMLSelectElement).selectedOptions.item(0);
     if (!selectedItem) return;
 
-    if (selectedItem.value === "custom") {
+    if (selectedItem.value.toLowerCase() === "custom") {
       customTimerVisibility.value = true;
+      missionTime.value = "";
       return;
     } else {
       customTimerVisibility.value = false;
@@ -121,14 +157,6 @@ export default function Activities({ activities, mission }: { activities: Signal
     missionTime.value = target.value;
   }
 
-  function timerOnAboutToElapse() {
-    console.log("timerOnAboutToElapse");
-  }
-
-  function timerOnElapsed() {
-    console.log("timerOnElapsed");
-  }
-
   chrome.runtime.onMessage.addListener(updateActivities);
   useEffect(() => {
     return () => chrome.runtime.onMessage.removeListener(updateActivities);
@@ -138,14 +166,7 @@ export default function Activities({ activities, mission }: { activities: Signal
     <div className="p-[10px]" data-section="actions">
       <div className="relative text-center text-lg">
         Latest actions
-        {mission.value?.running && (
-          <Timer
-            className="absolute right-0 top-0 flex h-full items-center"
-            timerAboutToElapse={timerOnAboutToElapse}
-            timerElapsed={timerOnElapsed}
-            toCount={missionTime.value}
-          />
-        )}
+        {mission.value?.running && <Timer className="absolute right-0 top-0 flex h-full items-center" toCount={missionTime.value} />}
       </div>
 
       <div className="mt-[10px] flex justify-between">
@@ -164,6 +185,7 @@ export default function Activities({ activities, mission }: { activities: Signal
         {!mission.value ? (
           <InputField
             onChange={(event) => (missionName.value = (event.target as HTMLInputElement).value)}
+            value={missionName.value}
             className="w-full text-lg"
             name="missionfield"
             placeholder="Fancy name..."
@@ -172,24 +194,30 @@ export default function Activities({ activities, mission }: { activities: Signal
           <h3 className="w-full text-lg">{mission.value.name}</h3>
         )}
 
-        {customTimerVisibility.value && (
-          <InputField onChange={onCustomMissionTimeChange} className="max-w-[40px]" name="minfield" placeholder="XX min" />
-        )}
         <label for="timer" className="mr-[3px] flex flex-shrink-0 items-center">
           Set timer:{" "}
         </label>
+        {customTimerVisibility.value && (
+          <InputField
+            value={missionTime.value}
+            disabled={!!mission.value}
+            onChange={onCustomMissionTimeChange}
+            className="max-w-[40px]"
+            name="minfield"
+            placeholder="XX min"
+          />
+        )}
         <select
           disabled={!!mission.value}
           onChange={onMissionTimeChange}
           name="timer"
           className="rounded-md border-none bg-gray-200 outline-none"
         >
-          <option selected value="15min">
-            15 min
-          </option>
-          <option value="20min">20 min</option>
-          <option value="25min">25 min</option>
-          <option value="custom">Custom</option>
+          {missionTimes.map((time) => (
+            <option selected={time.selected} value={time.value}>
+              {time.value}
+            </option>
+          ))}
         </select>
 
         {!mission.value && (

@@ -7,6 +7,7 @@ type InputFieldProps = {
   type?: string;
   className?: string;
   autofocus?: boolean;
+  disabled?: boolean;
   ref?: React.Ref<HTMLInputElement>;
   onChange?: (e: Event) => void;
   onFocus?: (e: Event) => void;
@@ -24,10 +25,12 @@ export default function InputField({
   className = "",
   type = "text",
   autofocus = true,
+  disabled = false,
 }: InputFieldProps) {
   return (
     <input
       autofocus={autofocus}
+      disabled={disabled}
       type={type}
       name={name}
       className={className + " ml-[5px] mr-[5px] bg-inherit outline-none placeholder:text-gray-800"}

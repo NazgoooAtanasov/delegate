@@ -95,7 +95,7 @@ export default function Timer({ toCount, timerAboutToElapse, timerElapsed, class
     <div className={`text-sm ${className}`}>
       Elapsed time:
       <span
-        className={`ml-[3px] ${timerState.value === "good" && "text-green-700"} ${timerState.value === "warning" && "text-yellow-700"} ${timerState.value === "bad" && "text-red-700"}`}
+        className={`ml-[3px] ${timerState.value === "good" && "text-green-700"} ${timerState.value === "warning" && "animate-pulse text-yellow-700"} ${timerState.value === "bad" && "text-red-700"}`}
       >
         {timerState.value === "bad" && "-"}
         {hours.value <= 9 ? `0${hours.value}` : hours.value}:{minutes.value <= 9 ? `0${minutes.value}` : minutes.value}:
