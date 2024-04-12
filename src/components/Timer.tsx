@@ -20,6 +20,12 @@ export default function Timer({ toCount, timerAboutToElapse, timerElapsed, class
   let timerAboutToElapseSent = false;
   let timerElapsedSent = false;
 
+  const hours = useSignal(0);
+  const minutes = useSignal(0);
+  const seconds = useSignal(0);
+  const timerCallback = useSignal<(() => void) | undefined>(undefined);
+  const elapsedTimer = useSignal(new Date());
+
   const target = useMemo(() => {
     const matches = toCount.match(timerRegex);
     const time = matches?.groups?.time;
@@ -47,11 +53,7 @@ export default function Timer({ toCount, timerAboutToElapse, timerElapsed, class
     }
   });
 
-  const hours = useSignal(0);
-  const minutes = useSignal(0);
-  const seconds = useSignal(0);
-  const timerCallback = useSignal<(() => void) | undefined>(undefined);
-  const elapsedTimer = useSignal(new Date());
+  function elapsed() {}
 
   function timer() {
     elapsedTimer.value = new Date();
@@ -60,6 +62,11 @@ export default function Timer({ toCount, timerAboutToElapse, timerElapsed, class
     hours.value = timerDiff.hours;
     minutes.value = timerDiff.minutes;
     seconds.value = timerDiff.seconds;
+
+    if (hours.value >= 1) {
+      timerCallback.value = elapsed;
+      return;
+    }
   }
 
   function countDown() {
@@ -86,7 +93,7 @@ export default function Timer({ toCount, timerAboutToElapse, timerElapsed, class
     }
   }
 
-  if (!timerCallback.value) {
+  if (!timerCallback.value && !timerElapsedSent) {
     timerCallback.value = countDown;
   }
   useTimer(timerCallback.value, 1000);
